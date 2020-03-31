@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+  decision_trees:
+    build: .
+    env_file: .env
+    restart: on-failure:5
+    volumes:
+      - ./decision_tree:/decision_tree
+    env_file:
+      - ./.flaskenv
+    ports:
+      - 5000:5000
+    depends_on:
+      - graph_db
+    links:
+      - "graph_db:graph_db"
+
+  graph_db:
+    image: neo4j:4.0.2-enterprise
+    restart: on-failure:5
+    ports:
+      - 7474:7474
+      - 6477:6477
+      - 7687:7687
+    env_file:
+      - ./.neo4jenv
+    volumes:
+      - ./neo4j/conf:/conf
+      - ./neo4j/data:/data
+      - ./neo4j/logs:/logs
+      - ./neo4j/plugins:/plugins
