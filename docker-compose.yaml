@@ -17,7 +17,7 @@ services:
       - "graph_db:graph_db"
 
   graph_db:
-    image: neo4j:4.0.2-enterprise
+    image: neo4j:3.3.4-enterprise
     restart: on-failure:5
     ports:
       - 7474:7474

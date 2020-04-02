@@ -6,7 +6,9 @@ class CreateAPIView(mixins.CreateMixin, MethodView):
     """
     Concrete view for creating a node.
     """
-    methods = ['POST']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.methods.add('POST')
 
     def post(self, *args, **kwargs):
         return self.create(*args, **kwargs)
@@ -16,7 +18,9 @@ class ListAPIView(mixins.ListMixin, MethodView):
     """
     Concrete view for listing nodes.
     """
-    methods = ['GET']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.methods.add('GET')
 
     def get(self, *args, **kwargs):
         return self.list(*args, **kwargs)
@@ -26,7 +30,9 @@ class RetrieveAPIView(mixins.RetrieveMixin, MethodView):
     """
     Concrete view for retrieving a node.
     """
-    methods = ['GET']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.methods.add('GET')
 
     def get(self, *args, **kwargs):
         return self.retrieve(*args, **kwargs)
@@ -36,7 +42,9 @@ class DestroyAPIView(mixins.DeleteMinxin, MethodView):
     """
     Concrete view for deleting a node.
     """
-    methods = ['DELETE']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.methods.add('DELETE')
 
     def delete(self, *args, **kwargs):
         return self.destroy(*args, **kwargs)
@@ -46,7 +54,10 @@ class UpdateAPIView(mixins.UpdateMixin, MethodView):
     """
     Concrete view for updating a node.
     """
-    methods = ['PUT', 'PATCH']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.methods.add('PUT')
+        self.methods.add('PATCH')
 
     def put(self, *args, **kwargs):
         return self.update(*args, **kwargs)
@@ -59,7 +70,9 @@ class OptionsAPIView(mixins.OptionsMixin, MethodView):
     """
     Concrete view for updating a node.
     """
-    methods = ['OPTIONS']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.methods.add('OPTIONS')
 
     def options(self, *args, **kwargs):
         return self.cors_preflight(*args, **kwargs)
@@ -69,7 +82,7 @@ class ListCreateAPIView(mixins.ListMixin, mixins.CreateMixin, mixins.OptionsMixi
     """
     Concrete view for listing a nodes or creating a node.
     """
-    methods = ['GET', 'POST', 'OPTIONS']
+    methods = {'GET', 'POST', 'OPTIONS'}
 
     def get(self, *args, **kwargs):
         return self.list(*args, **kwargs)
@@ -85,7 +98,7 @@ class RetrieveUpdateAPIView(mixins.RetrieveMixin, mixins.UpdateMixin, mixins.Opt
     """
     Concrete view for retrieving, updating a node.
     """
-    methods = ['GET', 'PUT', 'PATCH', 'OPTIONS']
+    methods = {'GET', 'PUT', 'PATCH', 'OPTIONS'}
 
     def get(self, *args, **kwargs):
         return self.retrieve(*args, **kwargs)
@@ -104,7 +117,7 @@ class RetrieveDestroyAPIView(mixins.RetrieveMixin, mixins.DeleteMinxin, mixins.O
     """
     Concrete view for retrieving or deleting a node.
     """
-    methods = ['GET', 'DELETE', 'OPTIONS']
+    methods = {'GET', 'DELETE', 'OPTIONS'}
 
     def get(self, *args, **kwargs):
         return self.retrieve(*args, **kwargs)
@@ -120,7 +133,7 @@ class RetrieveUpdateDestroyAPIView(mixins.RetrieveMixin, mixins.UpdateMixin, mix
     """
     Concrete view for retrieving, updating or deleting a node.
     """
-    methods = ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+    methods = {'GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'}
 
     def get(self, *args, **kwargs):
         return self.retrieve(*args, **kwargs)
