@@ -1,5 +1,6 @@
 from neomodel import StringProperty, UniqueIdProperty, EmailProperty, DateTimeProperty
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 
 class UniqueIdMixin(object):
@@ -9,6 +10,9 @@ class UniqueIdMixin(object):
 class TimestampMixin(object):
     created = DateTimeProperty(default_now=True)
     updated = DateTimeProperty(default_now=True)
+
+    def pre_save(self):
+        self.updated = datetime.now()
 
 
 class UserMixin(object):

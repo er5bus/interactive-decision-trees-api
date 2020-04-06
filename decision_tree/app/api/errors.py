@@ -1,7 +1,7 @@
-from . import auth
+from . import api
 from werkzeug.exceptions import HTTPException
 
 
-@auth.errorhandler(HTTPException)
+@api.errorhandler(HTTPException)
 def handle_exception(e):
     return {'error': e.name.lower().replace(' ', '-'), 'message': e.description}, e.code

@@ -24,7 +24,7 @@ def create_app(config_name):
     neomodel_config.DATABASE_URL = config[config_name].DATABASE_URL
     neomodel_config.ENCRYPTED_CONNECTION = False
 
-    from .auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint, url_prefix='/api/auth')
+    from .api import api as api_blueprint
+    app.register_blueprint(api_blueprint, url_prefix="/api")
 
     return app

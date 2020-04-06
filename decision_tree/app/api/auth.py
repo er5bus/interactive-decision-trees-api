@@ -1,8 +1,8 @@
-from . import auth
+from . import api
 from .. import models, schemas, jwt
 from views import generics , utils
 from flask import request, abort
-from flask_jwt_extended import create_access_token, get_jwt_identity, get_raw_jwt, get_jti
+from flask_jwt_extended import create_access_token, get_jwt_identity, get_raw_jwt, get_jti, jwt_required
 
 
 blacklist = set()
@@ -12,9 +12,14 @@ def check_if_token_in_blacklist(decrypted_token):
     return jti in blacklist
 
 
+@jwt.user_loader_callback_loader
+def user_loader_callback_loader(jwt_identity):
+    return models.User.nodes.filter(uid__exact=jwt_identity).get_or_none()
+
+
 class UserRegisterView(generics.CreateAPIView, generics.OptionsAPIView):
 
-    route_path = "/register"
+    route_path = "/auth/register"
     route_name = "user_register"
 
     model_class = models.User
@@ -27,13 +32,13 @@ class UserRegisterView(generics.CreateAPIView, generics.OptionsAPIView):
         (response, code) = super().create(self, *args, **kwargs)
         return {**response, "access_token": self.access_token }, code
 
-    def perform_create(self, instance):
-        super().perform_create(instance)
+    def perform_create(self, instance, relationship_instances):
+        super().perform_create(instance, relationship_instances)
         self.access_token = create_access_token(identity=instance.uid)
 
 
 class UserLoginView(generics.CreateAPIView, generics.OptionsAPIView):
-    route_path = "/login"
+    route_path = "/auth/login"
     route_name = "user_login"
 
     def post(self, *args, **kwargs):
@@ -49,10 +54,10 @@ class UserLoginView(generics.CreateAPIView, generics.OptionsAPIView):
 
 class UserLogoutView(generics.CreateAPIView):
 
-    route_path = "/logout"
+    route_path = "/auth/logout"
     route_name = "user_logout"
 
-    jwt_required = True
+    decorators = [jwt_required]
 
     def post(self, *args, **kwargs):
         jti = get_raw_jwt()["jti"]
@@ -60,6 +65,4 @@ class UserLogoutView(generics.CreateAPIView):
         return {"message": "Successfully logged out"}, 200
 
 
-utils.add_url_rule(auth, UserRegisterView)
-utils.add_url_rule(auth, UserLoginView)
-utils.add_url_rule(auth, UserLogoutView)
+utils.add_url_rule(api, UserRegisterView, UserLoginView, UserLogoutView)
