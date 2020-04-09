@@ -3,6 +3,7 @@ from marshmallow import pre_load, post_load, post_dump
 from collections import Iterable
 from functools import partialmethod
 
+
 class UniqueIdMixin(object):
     id = ma.Int()
     uid = ma.String()
@@ -24,15 +25,6 @@ class BaseSchema(ma.Schema):
             instance = current_instance
         else:
             instance = self.__model__()
-        relationship_instances = dict()
-        self.make_object(instance, relationship_instances, data)
-        if relationship_instances:
-            return instance, relationship_instances
-        return instance
-
-    def make_object(self, instance, relationship_instances, data):
         for key, value in data.items():
-            if key not in self.__relationship__ :
-                setattr(instance, key, value)
-            else:
-                relationship_instances[key] = value
+            setattr(instance, key, value)
+        return instance

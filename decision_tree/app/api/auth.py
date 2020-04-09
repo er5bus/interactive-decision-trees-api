@@ -32,8 +32,8 @@ class UserRegisterView(generics.CreateAPIView, generics.OptionsAPIView):
         (response, code) = super().create(self, *args, **kwargs)
         return {**response, "access_token": self.access_token }, code
 
-    def perform_create(self, instance, relationship_instances):
-        super().perform_create(instance, relationship_instances)
+    def perform_create(self, instance):
+        super().perform_create(instance)
         self.access_token = create_access_token(identity=instance.uid)
 
 

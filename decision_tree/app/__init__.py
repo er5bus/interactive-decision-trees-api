@@ -21,8 +21,9 @@ def create_app(config_name):
     jwt.init_app(app)
     cors.init_app(app)
 
-    neomodel_config.DATABASE_URL = config[config_name].DATABASE_URL
-    neomodel_config.ENCRYPTED_CONNECTION = False
+    neomodel_config.DATABASE_URL = config[config_name].NEOMODEL_DATABASE_URL
+    neomodel_config.ENCRYPTED_CONNECTION = config[config_name].NEOMODEL_ENCRYPTED_CONNECTION
+    neomodel_config.NEOMODEL_CYPHER_DEBUG = config[config_name].NEOMODEL_CYPHER_DEBUG
 
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix="/api")

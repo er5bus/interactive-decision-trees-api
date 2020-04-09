@@ -15,7 +15,9 @@ class Config:
     JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY", "hard to guess string")
     JWT_ERROR_MESSAGE_KEY = 'message'
 
-    DATABASE_URL = os.getenv('DATABASE_URL', '<replace it with a database url>')
+    NEOMODEL_DATABASE_URL = os.getenv('DATABASE_URL', '<replace it with a database url>')
+    NEOMODEL_CYPHER_DEBUG = False
+    NEOMODEL_ENCRYPTED_CONNECTION = False
 
     @classmethod
     def init_app(cls, app):
@@ -24,6 +26,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    NEOMODEL_CYPHER_DEBUG = True
 
 
 class ProductionConfig(Config):

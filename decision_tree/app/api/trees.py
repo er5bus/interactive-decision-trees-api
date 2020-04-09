@@ -13,13 +13,16 @@ class TreeListCreateView(generics.ListCreateAPIView):
     schema_class = schemas.TreeSchema
     unique_fields = ("tree_name", )
 
-    load_relationship = { "scores": True, "owner": True }
+    load_relationships = True
 
     decorators = [ jwt_required ]
 
-    def perform_create(self, instance, relationship_instances):
-        relationship_instances["owner"] = get_current_user()
-        super().perform_create(instance, relationship_instances)
+    def perform_create(self, tree):
+        super().perform_create(tree)
+        tree.owner_rel.connect(get_current_user())
+        for score in tree.scores or []:
+            score.save()
+            tree.scores_rel.connect(score)
 
 
 class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -30,11 +33,27 @@ class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     schema_class = schemas.TreeSchema
     unique_fields = ("tree_name", )
 
-    load_relationship = { "scores": True, "owner": True }
+    load_relationships = True
 
     decorators = [ jwt_required ]
 
     lookup_field_and_url_kwarg = {"uid": "id"}
+
+    def perform_update(self, tree):
+        for score in tree.scores_rel.all():
+            if not tree.scores or score not in tree.scores:
+                score.delete()
+
+        super().perform_update(tree)
+        tree.owner_rel.connect(get_current_user())
+        for score in tree.scores or []:
+            score.save()
+            tree.scores_rel.connect(score)
+
+    def perform_delete(self, tree):
+        for score in tree.scores_rel.all():
+            score.delete()
+        super().perform_delete(tree)
 
 
 utils.add_url_rule(api, TreeListCreateView, TreeRetrieveUpdateDestroyView)

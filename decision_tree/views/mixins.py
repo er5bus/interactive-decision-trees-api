@@ -1,4 +1,4 @@
-from flask import Response, request, abort
+from flask import Response, request, abort, jsonify
 from marshmallow.exceptions import ValidationError
 from copy import deepcopy
 from flask_jwt_extended import jwt_required, get_current_user
@@ -17,7 +17,7 @@ class BaseMethodMixin:
     model_class = None
     schema_class = None
 
-    load_relationship = dict()
+    load_relationships = False
 
     # lookup_field as the key and lookup_url_kwarg as the value
     lookup_field_and_url_kwarg = dict()
@@ -26,32 +26,47 @@ class BaseMethodMixin:
 
     methods = set()
 
-    def filter_nodes(self, **kwargs):
-        with db.read_transaction:
-            nodes = self.model_class.nodes
-            for relationship_attr, value in self.load_relationship.items():
-                nodes = nodes.has(**{relationship_attr: value})
-            if kwargs:
-                filter_kwargs = dict()
-                for lookup_field, value in kwargs.items():
-                    filter_kwargs["{0}__exact".format(lookup_field)] = value
-                return nodes.filter(**filter_kwargs).get_or_none()
+    def filter_node(self, model_class=None, **kwargs):
+        nodes = self.model_class.nodes if not model_class else model_class.nodes
+        if kwargs:
+            filter_kwargs = dict()
+            for lookup_field, value in kwargs.items():
+                filter_kwargs["{0}__exact".format(lookup_field)] = value
+            node = nodes.filter(**filter_kwargs).get_or_none()
+            if node:
+                node.load_relations = self.load_relationships
+            return node
+        return None
+
+    def filter_nodes(self, model_class=None, start=None, offset=None, **kwargs):
+        nodes = self.model_class.nodes if not model_class else model_class.nodes
+        if kwargs:
+            filter_kwargs = dict()
+            for lookup_field, value in kwargs.items():
+                filter_kwargs["{0}__exact".format(lookup_field)] = value
+            nodes = nodes.filter(**filter_kwargs)
+        nodes = nodes[start:offset]
+        for node in nodes:
+            node.load_relations = self.load_relationships
         return nodes
 
-    def get_node(self, **kwargs):
+    def get_node(self, model_class=None, **kwargs):
         filter_kwargs = {}
         for lookup_field, lookup_url_kwarg in self.lookup_field_and_url_kwarg.items():
             filter_kwargs[lookup_field] = kwargs.get(lookup_url_kwarg, None)
-        instance = self.filter_nodes(**filter_kwargs)
+        with db.read_transaction:
+            instance = self.filter_node(model_class=model_class, **filter_kwargs)
         if instance is None:
             abort(404)
         return instance
 
-    def paginate_nodes(self, **kwargs):
+    def paginate_nodes(self, model_class=None, **kwargs):
         page = request.args.get("page", type=int, default=1)
         item_per_page = request.args.get("item_per_page", type=int, default=10)
-        offset = page * item_per_page
-        items = self.filter_nodes(**kwargs)[(offset - item_per_page):offset]
+        offset = (page * item_per_page)
+        start = (offset - item_per_page)
+        with db.read_transaction:
+            items = self.filter_nodes(model_class=model_class, start=start, offset=offset, **kwargs)
         return items, len(items) == item_per_page
 
     def serialize(self, data = [], many=False):
@@ -61,7 +76,7 @@ class BaseMethodMixin:
     def validate_unique(self, instance, current_node = None):
         errors = {}
         for unique_field in self.unique_fields:
-            unique_node = self.filter_nodes(**{ unique_field: getattr(instance, unique_field) })
+            unique_node = self.filter_node(**{ unique_field: getattr(instance, unique_field) })
             if (unique_node and not current_node) or (unique_node and current_node and int(unique_node.id) != int(current_node.id)):
                 errors["Oops!"] = "{} field already exist.".format(unique_field)
         if errors:
@@ -70,10 +85,12 @@ class BaseMethodMixin:
     def deserialize(self, data = [], node = None, partial=False):
         try:
             serializer = self.schema_class()
+            if node:
+                node.load_relations = False
             serializer.context = dict(instance=node)
-            instance, relationship_instances = serializer.load(data, unknown="EXCLUDE", partial=partial)
+            instance = serializer.load(data, unknown="EXCLUDE", partial=partial)
             self.validate_unique(instance, node)
-            return instance, relationship_instances
+            return instance
         except ValidationError as err:
             self.raise_exception(err)
 
@@ -98,7 +115,7 @@ class RetrieveMixin(BaseMethodMixin):
 
     def retrieve (self, *args, **kwargs):
         instance = self.get_node(**kwargs)
-        return self.serialize(instance), 200
+        return self.serialize(instance, isinstance(instance, Iterable)), 200
 
 
 class CreateMixin(BaseMethodMixin):
@@ -106,22 +123,13 @@ class CreateMixin(BaseMethodMixin):
     Create a model instance
     """
     def create (self, *args, **kwargs):
-        instance, relationship_instances = self.deserialize(request.json)
+        instance = self.deserialize(request.json)
         with db.transaction:
-            self.perform_create(instance, relationship_instances)
+            self.perform_create(instance)
         return self.serialize(instance), 201
 
-    def perform_create(self, instance, relationship_instances):
+    def perform_create(self, instance):
         instance.save()
-        for relationship_attr, relationship_instance in relationship_instances.items():
-            instance_attr = getattr(instance, relationship_attr)
-            if isinstance(relationship_instance, Iterable):
-                for relation in relationship_instance:
-                    relation.save()
-                    instance_attr.connect(relation)
-            else:
-                relationship_instance.save()
-                instance_attr.connect(relationship_instance)
 
 
 class UpdateMixin(BaseMethodMixin):
@@ -130,33 +138,23 @@ class UpdateMixin(BaseMethodMixin):
     """
     def update (self, *args, **kwargs):
         instance = self.get_node(**kwargs)
-        instance_updated, relationship_instances = self.deserialize(request.json, deepcopy(instance), partial=False)
+        instance_updated = self.deserialize(request.json, deepcopy(instance), partial=False)
         with db.transaction:
-            self.perform_update(instance_updated, relationship_instances)
+            self.perform_update(instance_updated)
 
         return self.serialize(instance_updated), 200
 
     def partial_update (self, *args, **kwargs):
         instance = self.get_node(**kwargs)
-        instance_updated, relationship_instances = self.deserialize(request.json ,partial=True)
+        instance_updated = self.deserialize(request.json ,partial=True)
         with db.transaction:
-            self.perform_update(instance, relationship_instances)
+            self.perform_update(instance)
 
         return self.serialize(instance_updated), 200
 
 
-    def perform_update(self, instance, relationship_instances):
+    def perform_update(self, instance):
         instance.save()
-        for relationship_attr, relationship_instance in relationship_instances.items():
-            instance_attr = getattr(instance, relationship_attr)
-            if isinstance(relationship_instance, Iterable):
-                for relation in relationship_instance:
-                    print(relation)
-                    relation.save()
-                    instance_attr.connect(relation)
-            else:
-                relationship_instance.save()
-                instance_attr.connect(relationship_instance)
 
 
 class DeleteMinxin(BaseMethodMixin):
