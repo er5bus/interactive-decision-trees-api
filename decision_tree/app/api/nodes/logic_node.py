@@ -47,16 +47,18 @@ class LogicNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     def filter_node(self, model_class=None, **kwargs):
         tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
         content_node = tree.load_tree_node(kwargs.get("node"))
+
+        print(content_node)
         content_node.load_relations = True
         return content_node
 
-    def perform_update(self, logic_node_instance):
-        logic_node_instance.save()
-        # delete nodes
+    def perform_relation_delete(self, logic_node_instance):
         for rule in logic_node_instance.rules_rel.all():
             if rule not in logic_node_instance.rules:
                 rule.delete()
 
+    def perform_update(self, logic_node_instance):
+        logic_node_instance.save()
         for rule in logic_node_instance.rules or []:
             rule.save()
             rule.score_rel.connect(rule.score)
@@ -64,7 +66,9 @@ class LogicNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
             logic_node_instance.rules_rel.connect(rule)
 
-
+    def perform_delete(self, logic_node_instance):
+        self.perform_relation_delete(logic_node_instance)
+        super().perform_delete(logic_node_instance)
 
 
 utils.add_url_rule(api, LogicNodeCreateView, LogicNodeRetrieveUpdateDestroyView)

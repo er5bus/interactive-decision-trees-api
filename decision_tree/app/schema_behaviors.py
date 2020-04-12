@@ -5,8 +5,14 @@ from functools import partialmethod
 
 
 class UniqueIdMixin(object):
-    id = ma.Int()
+    id = ma.Int(allow_none=True)
     uid = ma.String()
+
+    @pre_load
+    def process_id(self, data, **kwargs):
+        if data.get('id') == " ":
+            data['id'] = None
+        return data
 
 
 class TimestampMixin(object):
@@ -16,7 +22,6 @@ class TimestampMixin(object):
 
 class BaseSchema(ma.Schema):
     __model__ = None
-    __relationship__ = tuple()
 
     @post_load()
     def deserialize(self, data = dict(), **kwargs):

@@ -18,11 +18,24 @@ class TreeListCreateView(generics.ListCreateAPIView):
     decorators = [ jwt_required ]
 
     def perform_create(self, tree):
-        super().perform_create(tree)
+        tree.save()
         tree.owner_rel.connect(get_current_user())
         for score in tree.scores or []:
             score.save()
             tree.scores_rel.connect(score)
+
+    def filter_nodes(self, model_class=None, start=None, offset=None, **kwargs):
+        user = get_current_user()
+        print(start, offset)
+        return user.load_trees(start, abs(start - offset))
+
+    def filter_unique_node(self, model_class=None, **kwargs):
+        user = get_current_user()
+        nodes = user.load_trees(**kwargs)
+        if nodes:
+            print(nodes)
+            return nodes[0]
+        return None
 
 
 class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

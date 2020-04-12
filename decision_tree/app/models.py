@@ -2,13 +2,6 @@ from neomodel import (StructuredNode, StructuredRel, cardinality, StringProperty
 from .model_behaviors import UniqueIdMixin, UserMixin, TimestampMixin, RelationshipAccess, BaseStructuredNode
 
 
-class User(BaseStructuredNode, UniqueIdMixin, UserMixin, TimestampMixin):
-    full_name = StringProperty()
-
-    trees_rel = RelationshipFrom("Tree", "OWNED_BY")
-    trees = RelationshipAccess(rel="trees_rel")
-
-
 class BaseNode(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     node_name = StringProperty(index=True)
     tree_rel = RelationshipTo("Tree", "RELATED_TO")
@@ -77,11 +70,11 @@ class Action(BaseStructuredNode):
 class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     DISPLAY_STYLES = {"BUTTON": "BUTTON", "PANEL": "PANEL"}
 
-    tree_name = StringProperty(unique_index=True)
+    tree_name = StringProperty(index=True)
     description = StringProperty()
     display_style = StringProperty(choices=DISPLAY_STYLES)
 
-    owner_rel = RelationshipTo(User, "OWNED_BY")
+    owner_rel = RelationshipTo("User", "OWNED_BY")
     owner = RelationshipAccess(rel="owner_rel", many=False)
 
     scores_rel = RelationshipTo("Score", "HAS_SCORE")
@@ -104,9 +97,11 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
                 self.logic_nodes.append(node)
 
     def load_tree_node(self, uid):
-        results, columns = self.cypher("MATCH (a) WHERE id(a)={self} MATCH (n)-[:RELATED_TO]->(a) " + "WHERE n.uid = '{uid}' RETURN n".format(uid=uid))
-        row = results.pop()
-        return BaseNode.inflate_node(row[0])
+        try:
+            results, columns = self.cypher("MATCH (a) WHERE id(a)={self} MATCH (n)-[:RELATED_TO]->(a) " + "WHERE n.uid = '{uid}' RETURN n".format(uid=uid))
+            return BaseNode.inflate_node(results[0][0])
+        except:
+            return None
 
     def fetch_all_tree_nodes(self):
         results, columns = self.cypher("MATCH (a) WHERE id(a)={self} MATCH (n)-[:RELATED_TO]->(a) RETURN n")
@@ -115,3 +110,28 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     def fetch_all_tree_scores(self):
         results, columns = self.cypher("MATCH (a) WHERE id(a)={self} MATCH (a)-[:HAS_SCORE]->(s) RETURN s")
         return [Score.inflate(row[0]) for row in results]
+
+
+class User(BaseStructuredNode, UniqueIdMixin, UserMixin, TimestampMixin):
+    full_name = StringProperty()
+
+    trees_rel = RelationshipFrom("Tree", "OWNED_BY")
+    trees = RelationshipAccess(rel="trees_rel")
+
+    def load_trees(self, skip=None, limit=None, operator="AND", **kwargs):
+        cypher = ""
+        for attr, value in kwargs.items():
+            cypher += operator if cypher else "WHERE "
+            cypher += " t.{attr} = '{value}'".format(attr=attr, value=value)
+
+        paginate = ""
+        if skip is not None and limit is not None:
+            paginate += "SKIP {skip} LIMIT {limit}".format(skip=skip, limit=limit)
+
+        results, columns = self.cypher("MATCH (a) WHERE id(a)={self} MATCH (t)-[:OWNED_BY]->(a) " + cypher + " RETURN t " + paginate )
+        nodes = []
+        for row in results:
+            node = Tree.inflate(row[0])
+            node.load_relations = True
+            nodes.append(node)
+        return nodes

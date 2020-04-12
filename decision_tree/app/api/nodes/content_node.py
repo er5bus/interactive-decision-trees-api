@@ -23,7 +23,7 @@ class ContentNodeCreateView(generics.CreateAPIView):
         content_node_instance.save()
         for action in content_node_instance.actions:
             action.save()
-            if action.point_to:
+            if action.point_to and action.point_to.id:
                 action.point_to_rel.connect(action.point_to)
             for action_value in action.values or []:
                 action_value.save()
@@ -52,8 +52,7 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         content_node.load_relations = True
         return content_node
 
-    def perform_update(self, content_node_instance):
-        content_node_instance.save()
+    def perform_relation_delete(self, content_node_instance):
         # delete actions
         for action in content_node_instance.actions_rel.all():
             for action_value in action.values_rel.all():
@@ -62,16 +61,26 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
             if content_node_instance.actions or action not in content_node_instance.actions:
                 action.delete()
 
+
+    def perform_update(self, content_node_instance):
+        content_node_instance.save()
+        self.perform_relation_delete(content_node_instance)
         for action in content_node_instance.actions:
             action.save()
-            if action.point_to:
+            if action.point_to and action.point_to.id:
                 action.point_to_rel.connect(action.point_to)
+            else:
+                action.point_to_rel.disconnect_all()
             for action_value in action.values or []:
                 action_value.save()
                 if action_value.score:
                     action_value.score_rel.connect(action_value.score)
                 action.values_rel.connect(action_value)
             content_node_instance.actions_rel.connect(action)
+
+    def perform_delete(self, content_node_instance):
+        self.perform_relation_delete(content_node_instance)
+        super().perform_delete(content_node_instance)
 
 
 utils.add_url_rule(api, ContentNodeCreateView, ContentNodeRetrieveUpdateDestroyView)

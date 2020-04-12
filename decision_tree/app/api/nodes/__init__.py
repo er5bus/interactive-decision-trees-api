@@ -20,12 +20,19 @@ class TreeNodesListView(generics.RetrieveAPIView):
     decorators = [ jwt_required ]
 
     def filter_node(self, model_class=None, **kwargs):
-        page = request.args.get("page", type=int, default=1)
-        item_per_page = request.args.get("item_per_page", type=int, default=10)
+        self.page = request.args.get("page", type=int, default=1)
+        self.item_per_page = request.args.get("item_per_page", type=int, default=10)
 
         tree = super().filter_node(model_class=model_class, **kwargs)
-        tree.load_tree_nodes((page * item_per_page - item_per_page), item_per_page)
+        if tree:
+            tree.load_tree_nodes((self.page * self.item_per_page - self.item_per_page), self.item_per_page)
         return tree
+
+    def retrieve(self, *args, **kwargs):
+        tree = self.get_node(**kwargs)
+        has_more = (len(tree.logic_nodes) + len(tree.content_nodes)) == self.item_per_page
+
+        return { "tree": self.serialize(tree), "has_more": has_more }, 200
 
 
 class NodesRetriveView(generics.RetrieveAPIView):
@@ -35,14 +42,19 @@ class NodesRetriveView(generics.RetrieveAPIView):
 
     decorators = [ jwt_required ]
 
-    def retrieve(self, *args, **kwargs):
-        tree = models.Tree.nodes.filter(uid__exact=kwargs.get("id")).get_or_none()
-        if tree is None:
-            abort(404)
+    model_class = models.Tree
+
+    def filter_node(self, model_class=None, **kwargs):
+        tree = super().filter_node(model_class=model_class, **kwargs)
+        if tree:
+            return tree.fetch_all_tree_nodes()
+        return None
+
+    def serialize(self, tree, many=False):
         items = []
         for node in tree.fetch_all_tree_nodes():
             items.append({"value": node.id, "label": "{1}> {0} ({1})".format(node.node_name, node.__class__.__name__  ) })
-        return { "items": items }, 200
+        return { "items": items }
 
 
 utils.add_url_rule(api, TreeNodesListView, NodesRetriveView)

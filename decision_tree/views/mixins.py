@@ -50,6 +50,9 @@ class BaseMethodMixin:
             node.load_relations = self.load_relationships
         return nodes
 
+    def filter_unique_node(self, model_class=None, **kwargs):
+        return self.filter_node(model_class=model_class, **kwargs)
+
     def get_node(self, model_class=None, **kwargs):
         filter_kwargs = {}
         for lookup_field, lookup_url_kwarg in self.lookup_field_and_url_kwarg.items():
@@ -76,9 +79,9 @@ class BaseMethodMixin:
     def validate_unique(self, instance, current_node = None):
         errors = {}
         for unique_field in self.unique_fields:
-            unique_node = self.filter_node(**{ unique_field: getattr(instance, unique_field) })
+            unique_node = self.filter_unique_node(**{ unique_field: getattr(instance, unique_field) })
             if (unique_node and not current_node) or (unique_node and current_node and int(unique_node.id) != int(current_node.id)):
-                errors["Oops!"] = "{} field already exist.".format(unique_field)
+                errors[unique_field] = "This {} is already exist.".format(unique_node.__class__.__name__)
         if errors:
             raise ValidationError(errors)
 
@@ -104,8 +107,8 @@ class ListMixin(BaseMethodMixin):
     """
 
     def list (self, *args, **kwargs):
-        (items, has_next) = self.paginate_nodes(**kwargs)
-        return dict(items=self.serialize(items, True), has_more=has_next), 200
+        (items, has_more) = self.paginate_nodes(**kwargs)
+        return dict(items=self.serialize(items, True), has_more=has_more), 200
 
 
 class RetrieveMixin(BaseMethodMixin):

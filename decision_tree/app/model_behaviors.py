@@ -4,6 +4,8 @@ from datetime import datetime
 
 
 class BaseStructuredNode(StructuredNode):
+    __abstract_node__ = True
+
     load_relations = False
 
 
