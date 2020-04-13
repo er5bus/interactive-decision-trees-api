@@ -37,12 +37,14 @@ class TreeNodesListView(generics.RetrieveAPIView):
 
 class NodesRetriveView(generics.RetrieveAPIView):
 
-    route_path = "/tree/<string:id>/all/nodes"
+    route_path = "/tree/<string:tree_uid>/all/nodes"
     route_name = "tree_retrieve_nodes"
 
     decorators = [ jwt_required ]
 
     model_class = models.Tree
+
+    lookup_field_and_url_kwarg = { "uid": "tree_uid" }
 
     def filter_node(self, model_class=None, **kwargs):
         tree = super().filter_node(model_class=model_class, **kwargs)
@@ -50,9 +52,9 @@ class NodesRetriveView(generics.RetrieveAPIView):
             return tree.fetch_all_tree_nodes()
         return None
 
-    def serialize(self, tree, many=False):
+    def serialize(self, tree_nodes, many=False):
         items = []
-        for node in tree.fetch_all_tree_nodes():
+        for node in tree_nodes:
             items.append({"value": node.id, "label": "{1}> {0} ({1})".format(node.node_name, node.__class__.__name__  ) })
         return { "items": items }
 

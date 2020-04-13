@@ -1,4 +1,4 @@
-from neomodel import (StructuredNode, StructuredRel, cardinality, StringProperty, IntegerProperty, UniqueIdProperty, RelationshipTo, RelationshipFrom)
+from neomodel import (StructuredNode, StructuredRel, cardinality, BooleanProperty, StringProperty, IntegerProperty, UniqueIdProperty, RelationshipTo, RelationshipFrom)
 from .model_behaviors import UniqueIdMixin, UserMixin, TimestampMixin, RelationshipAccess, BaseStructuredNode
 
 
@@ -49,6 +49,7 @@ class ContentNode(BaseNode):
     actions_rel = RelationshipTo("Action", "ACTIONS")
     actions = RelationshipAccess(rel="actions_rel")
 
+    first_node = BooleanProperty(default=False)
 
 class ActionValue(BaseStructuredNode):
     value = StringProperty()
@@ -83,6 +84,9 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     tree_nodes_rel = RelationshipFrom("BaseNode", "RELATED_TO")
     logic_nodes = RelationshipAccess()
     content_nodes = RelationshipAccess()
+
+    first_node_rel = RelationshipFrom("ContentNode", "START_NODE")
+    first_node = RelationshipAccess("first_node_rel", many=False)
 
 
     def load_tree_nodes(self, skip, limit):

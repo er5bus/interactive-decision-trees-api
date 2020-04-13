@@ -21,6 +21,13 @@ class ContentNodeCreateView(generics.CreateAPIView):
 
     def perform_create(self, content_node_instance):
         content_node_instance.save()
+        if content_node_instance.first_node:
+            if self.current_tree.first_node:
+                self.current_tree.first_node = False
+                self.current_tree.first_node.save()
+                self.current_tree.first_node_rel.disconnect_all()
+            self.current_tree.first_node_rel.connect(content_node_instance)
+
         for action in content_node_instance.actions:
             action.save()
             if action.point_to and action.point_to.id:
@@ -65,6 +72,16 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     def perform_update(self, content_node_instance):
         content_node_instance.save()
         self.perform_relation_delete(content_node_instance)
+
+        if content_node_instance.first_node:
+            if self.current_tree.first_node:
+                self.current_tree.first_node = False
+                self.current_tree.first_node.save()
+                self.current_tree.first_node_rel.disconnect_all()
+            self.current_tree.first_node_rel.connect(content_node_instance)
+        elif self.current_tree.first_node.uid == content_node_instance.uid:
+            self.current_tree.first_node_rel.disconnect_all()
+
         for action in content_node_instance.actions:
             action.save()
             if action.point_to and action.point_to.id:
