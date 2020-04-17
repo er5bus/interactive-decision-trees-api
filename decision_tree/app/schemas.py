@@ -75,7 +75,7 @@ class ContentNodeSchema(BaseNodeSchema):
     __model__ = models.ContentNode
 
 
-    content_area = ma.String(max_length=200, allow_none=True, required=False, validate=Length(max=200))
+    content_area = ma.String(max_length=5000, allow_none=True, required=False, validate=Length(max=5000))
     question = ma.String(max_length=1000, required=True, validate=Length(max=1000, min=1))
     actions = ma.List(ma.Nested(ActionSchema))
 
