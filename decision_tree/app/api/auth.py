@@ -1,6 +1,6 @@
 from . import api
 from .. import models, schemas, jwt
-from views import generics , utils
+from ..views import generics , utils
 from flask import request, abort
 from flask_jwt_extended import create_access_token, get_jwt_identity, get_raw_jwt, get_jti, jwt_required
 

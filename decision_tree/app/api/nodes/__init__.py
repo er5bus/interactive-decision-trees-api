@@ -1,6 +1,6 @@
 from .. import api
 from ... import models, schemas
-from views import utils, generics
+from ...views import utils, generics
 from flask_jwt_extended import jwt_required, get_current_user
 from flask import request
 from neomodel import match, Traversal
@@ -55,8 +55,32 @@ class NodesRetriveView(generics.RetrieveAPIView):
     def serialize(self, tree_nodes, many=False):
         items = []
         for node in tree_nodes:
-            items.append({"value": node.id, "label": "{1}> {0} ({1})".format(node.node_name, node.__class__.__name__  ) })
+            items.append({"value": node.id, "type": node.__class__.__name__, "label": "{1}> {0} ({1})".format(node.node_name, node.__class__.__name__  ) })
         return { "items": items }
 
 
-utils.add_url_rule(api, TreeNodesListView, NodesRetriveView)
+class NodeRetrieveView(generics.RetrieveAPIView):
+    route_path = "/tree/<string:tree_uid>/node/<string:node_uid>"
+    route_name = "node_retrieve"
+
+    decorators = [ jwt_required ]
+
+    lookup_field_and_url_kwarg = {"tree": "tree_uid" , "node": "node_uid"}
+
+    def filter_node(self, model_class=None, **kwargs):
+        self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
+        self.node = self.current_tree.load_tree_node(kwargs.get("node"))
+        self.node.load_relations = True
+        if isinstance(self.node, models.ContentNode):
+            self.schema_class = schemas.ContentNodeSchema
+        else:
+            self.schema_class = schemas.LogicNodeSchema
+        return self.node
+
+    def retrieve(self, *args, **kwargs):
+        response, response_code = super().retrieve(*args, **kwargs)
+
+        return { "type": self.node.__class__.__name__, "display_style": self.current_tree.display_style, **response }, response_code
+
+
+utils.add_url_rule(api, TreeNodesListView, NodesRetriveView, NodeRetrieveView)

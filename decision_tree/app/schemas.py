@@ -29,7 +29,7 @@ class TreeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin, sc
     logic_nodes = ma.List(ma.Nested("LogicNodeSchema"))
     content_nodes = ma.List(ma.Nested("ContentNodeSchema"))
 
-    first_node = ma.Nested("ContentNodeSchema")
+    first_node = ma.Nested("ContentNodeSchema", only=( "id", "uid" ))
 
 
 class BaseNodeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin, schema_behaviors.TimestampMixin):
@@ -78,5 +78,4 @@ class ContentNodeSchema(BaseNodeSchema):
     content_area = ma.String(max_length=200, allow_none=True, required=False, validate=Length(max=200))
     question = ma.String(max_length=1000, required=True, validate=Length(max=1000, min=1))
     actions = ma.List(ma.Nested(ActionSchema))
-    first_node = ma.Bool()
 

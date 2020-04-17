@@ -1,6 +1,6 @@
 from . import api
 from .. import models, schemas
-from views import utils, generics
+from ..views import utils, generics
 from flask_jwt_extended import jwt_required, get_current_user
 
 
@@ -58,7 +58,9 @@ class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
                 score.delete()
 
         super().perform_update(tree)
-        tree.owner_rel.connect(get_current_user())
+        if tree.first_node:
+            tree.first_node_rel.connect(tree.first_node)
+
         for score in tree.scores or []:
             score.save()
             tree.scores_rel.connect(score)

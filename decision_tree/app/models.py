@@ -49,8 +49,6 @@ class ContentNode(BaseNode):
     actions_rel = RelationshipTo("Action", "ACTIONS")
     actions = RelationshipAccess(rel="actions_rel")
 
-    first_node = BooleanProperty(default=False)
-
 class ActionValue(BaseStructuredNode):
     value = StringProperty()
 
@@ -85,7 +83,7 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     logic_nodes = RelationshipAccess()
     content_nodes = RelationshipAccess()
 
-    first_node_rel = RelationshipFrom("ContentNode", "START_NODE")
+    first_node_rel = RelationshipTo("ContentNode", "START_NODE")
     first_node = RelationshipAccess("first_node_rel", many=False)
 
 

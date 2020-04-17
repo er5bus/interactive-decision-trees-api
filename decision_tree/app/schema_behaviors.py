@@ -25,11 +25,7 @@ class BaseSchema(ma.Schema):
 
     @post_load()
     def deserialize(self, data = dict(), **kwargs):
-        current_instance = self.context.get("instance")
-        if current_instance and isinstance(current_instance, self.__model__):
-            instance = current_instance
-        else:
-            instance = self.__model__()
+        instance = self.__model__()
         for key, value in data.items():
             setattr(instance, key, value)
         return instance

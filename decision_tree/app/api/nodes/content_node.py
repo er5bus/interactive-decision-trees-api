@@ -1,6 +1,6 @@
 from .. import api
 from ... import models, schemas
-from views import utils, generics
+from ...views import utils, generics
 from flask_jwt_extended import jwt_required, get_current_user
 
 
@@ -21,12 +21,6 @@ class ContentNodeCreateView(generics.CreateAPIView):
 
     def perform_create(self, content_node_instance):
         content_node_instance.save()
-        if content_node_instance.first_node:
-            if self.current_tree.first_node:
-                self.current_tree.first_node = False
-                self.current_tree.first_node.save()
-                self.current_tree.first_node_rel.disconnect_all()
-            self.current_tree.first_node_rel.connect(content_node_instance)
 
         for action in content_node_instance.actions:
             action.save()
@@ -54,8 +48,8 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     lookup_field_and_url_kwarg = {"tree": "tree_uid" , "node": "node_uid"}
 
     def filter_node(self, model_class=None, **kwargs):
-        tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
-        content_node = tree.load_tree_node(kwargs.get("node"))
+        self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
+        content_node = self.current_tree.load_tree_node(kwargs.get("node"))
         content_node.load_relations = True
         return content_node
 
@@ -72,15 +66,6 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     def perform_update(self, content_node_instance):
         content_node_instance.save()
         self.perform_relation_delete(content_node_instance)
-
-        if content_node_instance.first_node:
-            if self.current_tree.first_node:
-                self.current_tree.first_node = False
-                self.current_tree.first_node.save()
-                self.current_tree.first_node_rel.disconnect_all()
-            self.current_tree.first_node_rel.connect(content_node_instance)
-        elif self.current_tree.first_node.uid == content_node_instance.uid:
-            self.current_tree.first_node_rel.disconnect_all()
 
         for action in content_node_instance.actions:
             action.save()
