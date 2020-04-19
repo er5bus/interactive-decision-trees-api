@@ -57,10 +57,11 @@ class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             if not tree.scores or score not in tree.scores:
                 score.delete()
 
-        super().perform_update(tree)
         if tree.first_node:
+            tree.first_node_rel.disconnect_all()
             tree.first_node_rel.connect(tree.first_node)
 
+        super().perform_update(tree)
         for score in tree.scores or []:
             score.save()
             tree.scores_rel.connect(score)
