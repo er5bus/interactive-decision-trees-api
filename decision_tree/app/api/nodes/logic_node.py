@@ -46,7 +46,7 @@ class LogicNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     def filter_node(self, model_class=None, **kwargs):
         tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
-        self.logic_node = tree.load_tree_node(kwargs.get("node"))
+        self.logic_node = tree.load_tree_node(uid=kwargs.get("node"))
         self.logic_node.load_relations = True
         return self.logic_node
 
@@ -67,7 +67,6 @@ class LogicNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
         logic_node_instance.default_node_rel.disconnect_all()
         logic_node_instance.default_node_rel.connect(logic_node_instance.default_node)
-
 
     def perform_delete(self, logic_node_instance):
         self.perform_relation_delete(logic_node_instance)

@@ -25,7 +25,7 @@ class BaseSchema(ma.Schema):
 
     @post_load()
     def deserialize(self, data = dict(), **kwargs):
-        instance = self.__model__()
+        instance = self.__model__() if data else None
         for key, value in data.items():
             setattr(instance, key, value)
         return instance

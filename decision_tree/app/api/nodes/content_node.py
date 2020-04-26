@@ -49,7 +49,7 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
 
     def filter_node(self, model_class=None, **kwargs):
         self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
-        content_node = self.current_tree.load_tree_node(kwargs.get("node"))
+        content_node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
         content_node.load_relations = True
         return content_node
 

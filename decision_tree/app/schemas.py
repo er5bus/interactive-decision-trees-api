@@ -18,6 +18,13 @@ class ScoreSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin):
     description = ma.String(max_length=500, required=True, validate=Length(max=500, min=4))
 
 
+class TagSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin):
+    __model__ = models.Tag
+
+    name = ma.String(max_length=200, required=True, validate=Length(max=200, min=2))
+    description = ma.String(max_length=500, required=True, validate=Length(max=500, min=4))
+
+
 class TreeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin, schema_behaviors.TimestampMixin):
     __model__ = models.Tree
 
@@ -30,6 +37,8 @@ class TreeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin, sc
     content_nodes = ma.List(ma.Nested("ContentNodeSchema"))
 
     first_node = ma.Nested("ContentNodeSchema", only=( "id", "uid" ))
+    tags = ma.Pluck(TagSchema, "id", many=True)
+    tree_tags = ma.List(ma.Nested(TagSchema), dump_only=True )
 
 
 class BaseNodeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin, schema_behaviors.TimestampMixin):

@@ -69,7 +69,7 @@ class NodeRetrieveView(generics.RetrieveAPIView):
 
     def filter_node(self, model_class=None, **kwargs):
         self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
-        self.node = self.current_tree.load_tree_node(kwargs.get("node"))
+        self.node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
         self.node.load_relations = True
         if isinstance(self.node, models.ContentNode):
             self.schema_class = schemas.ContentNodeSchema
