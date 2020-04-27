@@ -23,6 +23,7 @@ class TagSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin):
 
     name = ma.String(max_length=200, required=True, validate=Length(max=200, min=2))
     description = ma.String(max_length=500, required=True, validate=Length(max=500, min=4))
+    color = ma.String(max_length=200, required=True, validate=Length(max=200, min=2))
 
 
 class TreeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin, schema_behaviors.TimestampMixin):

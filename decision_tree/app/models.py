@@ -17,6 +17,7 @@ class BaseNode(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
 class Tag(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     name = StringProperty(index=True)
     description = StringProperty()
+    color = StringProperty()
 
     tree_rel = RelationshipFrom("Tree", "HAS_TAG")
     tree = LazyLoadingRelationship(relationship="tree_rel", many=False)
@@ -93,7 +94,7 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
 
     tags_rel = RelationshipTo("Tag", "HAS_TAG")
     tree_tags = LazyLoadingRelationship(relationship="tags_rel")
-    tags = []
+    tags = LazyLoadingRelationship(relationship="tags_rel")
 
     tree_nodes_rel = RelationshipFrom("BaseNode", "RELATED_TO")
     logic_nodes = LazyLoadingRelationship()

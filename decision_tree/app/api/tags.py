@@ -11,7 +11,7 @@ class TagListCreateView(generics.ListCreateAPIView):
 
     model_class = models.Tag
     schema_class = schemas.TagSchema
-    unique_fields = ("name", )
+    unique_fields = ("name", "color" )
 
     load_relationships = True
 
@@ -39,7 +39,7 @@ class TagRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     model_class = models.Tag
     schema_class = schemas.TagSchema
-    unique_fields = ("name", )
+    unique_fields = ("name", "color" )
 
     load_relationships = True
 
@@ -64,7 +64,7 @@ class TagsRetriveView(generics.RetrieveAPIView):
 
     def retrieve(self, *args, **kwargs):
         user = get_current_user()
-        return { "items": [ {"value": tag.id, "label": tag.name, "description": tag.description } for tag in user.load_tags() ] }, 200
+        return { "items": [ {"value": tag.id, "label": tag.name, "description": tag.description, 'color': tag.color } for tag in user.load_tags() ] }, 200
 
 
 utils.add_url_rule(api, TagListCreateView, TagRetrieveUpdateDestroyView, TagsRetriveView)
