@@ -3,14 +3,19 @@ from .model_behaviors import UniqueIdMixin, UserMixin, TimestampMixin, LazyLoadi
 
 
 class BaseNode(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.node_type = self.__class__.__name__
+
     node_name = StringProperty(index=True)
     tree_rel = RelationshipTo("Tree", "RELATED_TO")
 
     @classmethod
     def inflate_node(cls, node):
-        if "ContentNode" in node.labels:
+        if ContentNode.__name__ in node.labels:
             return ContentNode.inflate(node)
-        elif "LogicNode" in node.labels:
+        elif LogicNode.__name__ in node.labels:
             return LogicNode.inflate(node)
 
 
@@ -93,25 +98,16 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     scores = LazyLoadingRelationship(relationship="scores_rel")
 
     tags_rel = RelationshipTo("Tag", "HAS_TAG")
-    tree_tags = LazyLoadingRelationship(relationship="tags_rel")
     tags = LazyLoadingRelationship(relationship="tags_rel")
 
     tree_nodes_rel = RelationshipFrom("BaseNode", "RELATED_TO")
-    logic_nodes = LazyLoadingRelationship()
-    content_nodes = LazyLoadingRelationship()
 
     first_node_rel = RelationshipTo("ContentNode", "START_NODE")
     first_node = LazyLoadingRelationship("first_node_rel", many=False)
 
     def load_tree_nodes(self, skip, limit, **kwargs):
-        results = self.cypher_query.cypher_query_builder("a").match("n", "RELATED_TO", "a").and_where("n", **kwargs)\
+        return self.cypher_query.cypher_query_builder("a").match("n", "RELATED_TO", "a").and_where("n", **kwargs)\
             .return_alias("n").paginate(skip, limit).get_all(BaseNode.inflate_node)
-
-        for node in results:
-            if isinstance(node, ContentNode):
-                self.content_nodes.append(node)
-            elif isinstance(node, LogicNode):
-                self.logic_nodes.append(node)
 
     def load_tree_node(self, **kwargs):
         return self.cypher_query.cypher_query_builder("a").match("n", "RELATED_TO", "a").and_where("n", **kwargs)\

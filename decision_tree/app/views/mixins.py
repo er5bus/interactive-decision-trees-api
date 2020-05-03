@@ -72,8 +72,8 @@ class BaseMethodMixin:
             items = self.filter_nodes(model_class=model_class, start=start, offset=offset, **kwargs)
         return items, len(items) == item_per_page
 
-    def serialize(self, data = [], many=False):
-        serializer = self.schema_class(many=many, unknown="EXCLUDE")
+    def serialize(self, data = [], many=False, schema_class=None):
+        serializer = self.schema_class(many=many, unknown="EXCLUDE") if not schema_class else schema_class(many=many, unknown="EXCLUDE")
         return serializer.dump(data)
 
     def validate_unique(self, instance, current_node = None):
@@ -85,9 +85,9 @@ class BaseMethodMixin:
         if errors:
             raise ValidationError(errors)
 
-    def deserialize(self, data = [], node = None, partial=False):
+    def deserialize(self, data = [], node = None, partial=False, schema_class=None):
         try:
-            serializer = self.schema_class()
+            serializer = self.schema_class() if not schema_class else schema_class()
             if node:
                 node.load_relations = False
             serializer.context = dict(instance=node)

@@ -64,7 +64,7 @@ class TagsRetriveView(generics.RetrieveAPIView):
 
     def retrieve(self, *args, **kwargs):
         user = get_current_user()
-        return { "items": [ {"value": tag.id, "label": tag.name, "description": tag.description, 'color': tag.color } for tag in user.load_tags() ] }, 200
+        return { "items": [ {"id": tag.id, "uid": tag.uid, "name": tag.name, "description": tag.description, 'color': tag.color } for tag in user.load_tags() ] }, 200
 
 
 utils.add_url_rule(api, TagListCreateView, TagRetrieveUpdateDestroyView, TagsRetriveView)

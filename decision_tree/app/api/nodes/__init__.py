@@ -25,14 +25,21 @@ class TreeNodesListView(generics.RetrieveAPIView):
 
         tree = super().filter_node(model_class=model_class, **kwargs)
         if tree:
-            tree.load_tree_nodes((self.page * self.item_per_page - self.item_per_page), self.item_per_page)
-        return tree
+            return tree.load_tree_nodes((self.page * self.item_per_page - self.item_per_page), self.item_per_page)
+        return None
 
     def retrieve(self, *args, **kwargs):
-        tree = self.get_node(**kwargs)
-        has_more = (len(tree.logic_nodes) + len(tree.content_nodes)) == self.item_per_page
+        tree_nodes = self.get_node(**kwargs)
+        has_more = len(tree_nodes) == self.item_per_page
 
-        return { "tree": self.serialize(tree), "has_more": has_more }, 200
+        items = list()
+        for node in tree_nodes:
+            if node.node_type == models.ContentNode.__name__:
+                items.append(self.serialize(node, schema_class=schemas.ContentNodeSchema))
+            elif node.node_type == models.LogicNode.__name__:
+                items.append(self.serialize(node, schema_class=schemas.LogicNodeSchema))
+
+        return { "items": items, "has_more": has_more }, 200
 
 
 class NodesRetriveView(generics.RetrieveAPIView):
@@ -55,7 +62,7 @@ class NodesRetriveView(generics.RetrieveAPIView):
     def serialize(self, tree_nodes, many=False):
         items = []
         for node in tree_nodes:
-            items.append({"value": node.id, "type": node.__class__.__name__, "label": "{1}> {0} ({1})".format(node.node_name, node.__class__.__name__  ) })
+            items.append({"value": node.id, "type": node.node_type, "label": "{1}> {0}".format(node.node_name, node.node_type  ) })
         return { "items": items }
 
 
