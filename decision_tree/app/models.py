@@ -63,7 +63,7 @@ class ContentNode(BaseNode):
     content_area = StringProperty()
     question = StringProperty(index=True)
 
-    actions_rel = RelationshipTo("Action", "ACTIONS")
+    actions_rel = RelationshipTo("Action", "ACTIONS", cardinality=cardinality.ZeroOrMore)
     actions = LazyLoadingRelationship(relationship="actions_rel")
 
 

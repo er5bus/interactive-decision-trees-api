@@ -26,6 +26,8 @@ class BaseMethodMixin:
 
     methods = set()
 
+    item_per_page = 2
+
     def filter_node(self, model_class=None, **kwargs):
         nodes = self.model_class.nodes if not model_class else model_class.nodes
         if kwargs:
@@ -65,7 +67,7 @@ class BaseMethodMixin:
 
     def paginate_nodes(self, model_class=None, **kwargs):
         page = request.args.get("page", type=int, default=1)
-        item_per_page = request.args.get("item_per_page", type=int, default=10)
+        item_per_page = request.args.get("item_per_page", type=int, default=self.item_per_page)
         offset = (page * item_per_page)
         start = (offset - item_per_page)
         with db.read_transaction:
@@ -73,7 +75,7 @@ class BaseMethodMixin:
         return items, len(items) == item_per_page
 
     def serialize(self, data = [], many=False, schema_class=None):
-        serializer = self.schema_class(many=many, unknown="EXCLUDE") if not schema_class else schema_class(many=many, unknown="EXCLUDE")
+        serializer = self.schema_class(many=many) if not schema_class else schema_class(many=many)
         return serializer.dump(data)
 
     def validate_unique(self, instance, current_node = None):

@@ -60,7 +60,9 @@ class LogicNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_relation_delete(logic_node_instance)
         for rule in logic_node_instance.rules or []:
             rule.save()
+            rule.score_rel.disconnect_all()
             rule.score_rel.connect(rule.score)
+            rule.point_to_rel.disconnect_all()
             rule.point_to_rel.connect(rule.point_to)
 
             logic_node_instance.rules_rel.connect(rule)

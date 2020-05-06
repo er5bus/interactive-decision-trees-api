@@ -49,14 +49,14 @@ class BaseNodeSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin
     #tree = ma.Nested(TreeSchema, only=( "id", "uid" ))
 
 
-class ActionValueSchema(schema_behaviors.BaseSchema):
+class ActionValueSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin):
     __model__ = models.ActionValue
 
     value = ma.Int()
     score = ma.Nested(ScoreSchema, only=( "id", "uid" ))
 
 
-class ActionSchema(schema_behaviors.BaseSchema):
+class ActionSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin):
     __model__ = models.Action
 
     name = ma.String(max_length=200, required=True, validate=Length(max=200, min=2))
@@ -65,7 +65,7 @@ class ActionSchema(schema_behaviors.BaseSchema):
     values = ma.List(ma.Nested(ActionValueSchema))
 
 
-class RuleSchema(schema_behaviors.BaseSchema):
+class RuleSchema(schema_behaviors.BaseSchema, schema_behaviors.UniqueIdMixin):
     __model__ = models.Rule
 
     operator = ma.String(required=True, validate=OneOf(models.Rule.OPERATORS))

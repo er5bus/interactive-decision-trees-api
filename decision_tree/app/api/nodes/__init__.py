@@ -21,7 +21,7 @@ class TreeNodesListView(generics.RetrieveAPIView):
 
     def filter_node(self, model_class=None, **kwargs):
         self.page = request.args.get("page", type=int, default=1)
-        self.item_per_page = request.args.get("item_per_page", type=int, default=10)
+        self.item_per_page = request.args.get("item_per_page", type=int, default=self.item_per_page)
 
         tree = super().filter_node(model_class=model_class, **kwargs)
         if tree:

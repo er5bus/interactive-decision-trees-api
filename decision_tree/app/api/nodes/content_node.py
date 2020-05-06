@@ -57,27 +57,28 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         # delete actions
         for action in content_node_instance.actions_rel.all():
             for action_value in action.values_rel.all():
-                if action_value not in [ action.values or [] for action in content_node_instance.actions ]:
-                    action_value.delete()
-            if content_node_instance.actions or action not in content_node_instance.actions:
+                for action_instance in content_node_instance.actions:
+                    if hasattr(action_instance, "id") and action_instance.id == action.id and action_value not in action_instance.values:
+                        action_value.delete()
+            if content_node_instance.actions and action not in content_node_instance.actions:
                 action.delete()
 
-
     def perform_update(self, content_node_instance):
-        content_node_instance.save()
         self.perform_relation_delete(content_node_instance)
+        content_node_instance.save()
 
         for action in content_node_instance.actions:
             action.save()
+            action.point_to_rel.disconnect_all()
             if action.point_to and action.point_to.id:
                 action.point_to_rel.connect(action.point_to)
-            else:
-                action.point_to_rel.disconnect_all()
+
             for action_value in action.values or []:
                 action_value.save()
                 if action_value.score:
                     action_value.score_rel.connect(action_value.score)
                 action.values_rel.connect(action_value)
+
             content_node_instance.actions_rel.connect(action)
 
     def perform_delete(self, content_node_instance):
