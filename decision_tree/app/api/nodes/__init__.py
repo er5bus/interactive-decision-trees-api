@@ -7,7 +7,7 @@ from neomodel import match, Traversal
 from . import content_node, logic_node
 
 
-class TreeNodesListView(generics.RetrieveAPIView):
+class TreeNodesListView(generics.ListAPIView):
 
     route_path = "/tree/<string:tree_uid>/nodes"
     route_name = "tree_list_nodes"
@@ -15,31 +15,46 @@ class TreeNodesListView(generics.RetrieveAPIView):
     lookup_field_and_url_kwarg = { "uid": "tree_uid" }
 
     model_class = models.Tree
-    schema_class = schemas.TreeSchema
 
     decorators = [ jwt_required ]
 
-    def filter_node(self, model_class=None, **kwargs):
-        self.page = request.args.get("page", type=int, default=1)
-        self.item_per_page = request.args.get("item_per_page", type=int, default=self.item_per_page)
-
-        tree = super().filter_node(model_class=model_class, **kwargs)
+    def filter_nodes(self, model_class=None, start=None, offset=None, **kwargs):
+        tree = super().filter_node(model_class=model_class, uid=kwargs.get("tree_uid"))
         if tree:
-            return tree.load_tree_nodes((self.page * self.item_per_page - self.item_per_page), self.item_per_page)
+            return tree.load_tree_nodes(start, abs(start - offset))
+        return []
+
+    def serialize(self, data = [], many=False, schema_class=None):
+        items = list()
+        for node in data:
+            if  isinstance(node, models.ContentNode):
+                items.append(super().serialize(node, schema_class=schemas.ContentNodeSchema))
+            elif isinstance(node, models.LogicNode):
+                items.append(super().serialize(node, schema_class=schemas.LogicNodeSchema))
+        return items
+
+
+class TreeFirstNodeSetView(generics.ListCreateAPIView):
+    route_path = "/tree/<string:tree_uid>/first/node/<string:node_uid>"
+    route_name = "content_node_set_first_node"
+
+    lookup_field_and_url_kwarg = { "tree": "tree_uid", "node": "node_uid" }
+
+    schema_class = schemas.ContentNodeSchema
+    decorators = [ jwt_required ]
+
+    def filter_node(self, model_class=None, **kwargs):
+        print(kwargs)
+        self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
+        if self.current_tree:
+            return self.current_tree.load_tree_node(uid=kwargs.get("node"))
         return None
 
-    def retrieve(self, *args, **kwargs):
-        tree_nodes = self.get_node(**kwargs)
-        has_more = len(tree_nodes) == self.item_per_page
-
-        items = list()
-        for node in tree_nodes:
-            if node.node_type == models.ContentNode.__name__:
-                items.append(self.serialize(node, schema_class=schemas.ContentNodeSchema))
-            elif node.node_type == models.LogicNode.__name__:
-                items.append(self.serialize(node, schema_class=schemas.LogicNodeSchema))
-
-        return { "items": items, "has_more": has_more }, 200
+    def create(self, *args, **kwargs):
+        content_node = self.get_node(**kwargs)
+        self.current_tree.first_node_rel.disconnect_all()
+        self.current_tree.first_node_rel.connect(content_node)
+        return self.serialize(content_node, many=False), 200
 
 
 class NodesRetriveView(generics.RetrieveAPIView):
@@ -62,7 +77,7 @@ class NodesRetriveView(generics.RetrieveAPIView):
     def serialize(self, tree_nodes, many=False):
         items = []
         for node in tree_nodes:
-            items.append({"value": node.id, "type": node.node_type, "label": "{1}> {0}".format(node.node_name, node.node_type  ) })
+            items.append({"value": node.id, "type": node.node_type, "label": "{0} > {1}".format(node.node_type, node.node_name) })
         return { "items": items }
 
 
@@ -90,4 +105,4 @@ class NodeRetrieveView(generics.RetrieveAPIView):
         return { "type": self.node.__class__.__name__, "display_style": self.current_tree.display_style, **response }, response_code
 
 
-utils.add_url_rule(api, TreeNodesListView, NodesRetriveView, NodeRetrieveView)
+utils.add_url_rule(api, TreeFirstNodeSetView, TreeNodesListView, NodesRetriveView, NodeRetrieveView)

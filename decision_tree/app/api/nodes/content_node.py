@@ -24,13 +24,17 @@ class ContentNodeCreateView(generics.CreateAPIView):
 
         for action in content_node_instance.actions:
             action.save()
+
             if action.point_to and action.point_to.id:
                 action.point_to_rel.connect(action.point_to)
+
             for action_value in action.values or []:
                 action_value.save()
                 if action_value.score:
                     action_value.score_rel.connect(action_value.score)
+
                 action.values_rel.connect(action_value)
+
             content_node_instance.actions_rel.connect(action)
         content_node_instance.tree_rel.connect(self.current_tree)
         self.current_tree.tree_nodes_rel.connect(content_node_instance)
@@ -49,9 +53,12 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
 
     def filter_node(self, model_class=None, **kwargs):
         self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
-        content_node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
-        content_node.load_relations = True
-        return content_node
+        if self.current_tree:
+            content_node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
+            if content_node:
+                content_node.load_relations = True
+            return content_node
+        return None
 
     def perform_relation_delete(self, content_node_instance):
         # delete actions
@@ -69,6 +76,7 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
 
         for action in content_node_instance.actions:
             action.save()
+
             action.point_to_rel.disconnect_all()
             if action.point_to and action.point_to.id:
                 action.point_to_rel.connect(action.point_to)

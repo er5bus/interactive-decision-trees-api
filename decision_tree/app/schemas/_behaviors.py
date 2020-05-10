@@ -1,4 +1,4 @@
-from . import ma
+from .. import ma
 from marshmallow import pre_load, post_load, post_dump
 from collections import Iterable
 from functools import partialmethod

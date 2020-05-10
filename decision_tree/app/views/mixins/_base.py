@@ -1,6 +1,5 @@
-from flask import Response, request, abort, jsonify
+from flask import request, abort, jsonify
 from marshmallow.exceptions import ValidationError
-from copy import deepcopy
 from flask_jwt_extended import jwt_required, get_current_user
 from neomodel import db, Q
 from collections import Iterable
@@ -26,7 +25,7 @@ class BaseMethodMixin:
 
     methods = set()
 
-    item_per_page = 2
+    item_per_page = 10
 
     def filter_node(self, model_class=None, **kwargs):
         nodes = self.model_class.nodes if not model_class else model_class.nodes
@@ -72,7 +71,7 @@ class BaseMethodMixin:
         start = (offset - item_per_page)
         with db.read_transaction:
             items = self.filter_nodes(model_class=model_class, start=start, offset=offset, **kwargs)
-        return items, len(items) == item_per_page
+        return items, len(items) == item_per_page, page
 
     def serialize(self, data = [], many=False, schema_class=None):
         serializer = self.schema_class(many=many) if not schema_class else schema_class(many=many)
@@ -101,99 +100,3 @@ class BaseMethodMixin:
 
     def raise_exception(self, errors):
         abort(400, errors.messages)
-
-
-class ListMixin(BaseMethodMixin):
-    """
-    List model objects.
-    """
-
-    def list (self, *args, **kwargs):
-        (items, has_more) = self.paginate_nodes(**kwargs)
-        return dict(items=self.serialize(items, True), has_more=has_more), 200
-
-
-class RetrieveMixin(BaseMethodMixin):
-    """
-    Retrieve a model instance
-    """
-
-    def retrieve (self, *args, **kwargs):
-        instance = self.get_node(**kwargs)
-        return self.serialize(instance, isinstance(instance, Iterable)), 200
-
-
-class CreateMixin(BaseMethodMixin):
-    """
-    Create a model instance
-    """
-    def create (self, *args, **kwargs):
-        instance = self.deserialize(request.json)
-        with db.transaction:
-            self.perform_create(instance)
-        return self.serialize(instance), 201
-
-    def perform_create(self, instance):
-        instance.save()
-
-
-class UpdateMixin(BaseMethodMixin):
-    """
-    Update model instance
-    """
-    def update (self, *args, **kwargs):
-        instance = self.get_node(**kwargs)
-        instance_updated = self.deserialize(request.json, deepcopy(instance), partial=False)
-        with db.transaction:
-            self.perform_update(instance_updated)
-
-        return self.serialize(instance_updated), 200
-
-    def partial_update (self, *args, **kwargs):
-        instance = self.get_node(**kwargs)
-        instance_updated = self.deserialize(request.json ,partial=True)
-        with db.transaction:
-            self.perform_update(instance)
-
-        return self.serialize(instance_updated), 200
-
-
-    def perform_update(self, instance):
-        instance.save()
-
-
-class DeleteMinxin(BaseMethodMixin):
-    """
-    Delete model instance
-    """
-    def destroy (self, *args, **kwargs):
-        instance = self.get_node(**kwargs)
-        self.perform_delete(instance)
-
-        return Response(status=204)
-
-    def perform_delete(self, instance):
-        with db.write_transaction:
-            instance.delete()
-
-
-class OptionsMixin:
-    """
-    CORS Preflight Mixin
-    """
-    access_control_allowed_headers = "Content-Type, Authorization, X-Requested-With"
-    access_control_max_age = 120
-    access_control_allowed_credentials = False
-    access_control_exposed_headers = "*"
-
-    def cors_preflight (self, *args, **kwargs):
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers" : self.access_control_allowed_headers,
-            "Access-Control-Allow-Methods": tuple(self.methods),
-            "Access-Control-Max-Age": self.access_control_max_age,
-            "Access-Control-Allow-Credentials": self.access_control_allowed_credentials,
-            "Access-Control-Expose-Headers": self.access_control_exposed_headers,
-            "Vary": "Origin"  # in case of server cache the response and the origin is not a wild card
-        }
-        return Response(status=204, headers=headers)

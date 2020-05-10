@@ -84,5 +84,26 @@ class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             score.delete()
         super().perform_delete(tree)
 
+class TreeRetriveAllView(generics.RetrieveAPIView):
 
-utils.add_url_rule(api, TreeListCreateView, TreeRetrieveUpdateDestroyView)
+    route_path = "/trees/all"
+    route_name = "tree_retrieve_all"
+
+    decorators = [ jwt_required ]
+
+    model_class = models.Tree
+
+    lookup_field_and_url_kwarg = { "uid": "tree_uid" }
+
+    def filter_node(self, model_class=None, **kwargs):
+        user = get_current_user()
+        return user.load_trees(0, 500)
+
+    def serialize(self, trees, many=False):
+        items = []
+        for tree in trees:
+            items.append({"value": tree.id, "label": tree.tree_name })
+        return { "items": items }
+
+
+utils.add_url_rule(api, TreeListCreateView, TreeRetriveAllView, TreeRetrieveUpdateDestroyView)
