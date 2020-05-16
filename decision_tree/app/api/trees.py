@@ -84,6 +84,7 @@ class TreeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             score.delete()
         super().perform_delete(tree)
 
+
 class TreeRetriveAllView(generics.RetrieveAPIView):
 
     route_path = "/trees/all"
@@ -102,7 +103,8 @@ class TreeRetriveAllView(generics.RetrieveAPIView):
     def serialize(self, trees, many=False):
         items = []
         for tree in trees:
-            items.append({"value": tree.id, "label": tree.tree_name })
+            if isinstance(tree.first_node, models.ContentNode):
+                items.append({"value": tree.id, "label": tree.tree_name })
         return { "items": items }
 
 
