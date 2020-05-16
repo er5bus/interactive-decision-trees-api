@@ -5,3 +5,4 @@ flask-marshmallow==0.10.1
 neomodel==3.3.2
 Flask-Cors==3.0.8
 uwsgi==2.0.18
+sentry-sdk==0.14.4

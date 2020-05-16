@@ -1,9 +1,11 @@
+import sentry_sdk
 from flask import Flask
 from config import config
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from neomodel import config as neomodel_config
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 
 ma = Marshmallow()
@@ -12,6 +14,7 @@ cors = CORS()
 
 
 def create_app(config_name):
+
     app = Flask(__name__)
 
     app.config.from_object(config[config_name])
@@ -24,6 +27,11 @@ def create_app(config_name):
     neomodel_config.DATABASE_URL = config[config_name].NEOMODEL_DATABASE_URL
     neomodel_config.ENCRYPTED_CONNECTION = config[config_name].NEOMODEL_ENCRYPTED_CONNECTION
     neomodel_config.NEOMODEL_CYPHER_DEBUG = config[config_name].NEOMODEL_CYPHER_DEBUG
+
+    sentry_sdk.init(
+        dsn=config[config_name].SENTRY_CDN,
+        integrations=[FlaskIntegration()]
+    )
 
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix="/api")

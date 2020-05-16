@@ -19,6 +19,8 @@ class Config:
     NEOMODEL_CYPHER_DEBUG = False
     NEOMODEL_ENCRYPTED_CONNECTION = False
 
+    SENTRY_CDN = os.getenv('SENTRY_CDN', '<replace it with a database url>')
+
     @classmethod
     def init_app(cls, app):
         pass
