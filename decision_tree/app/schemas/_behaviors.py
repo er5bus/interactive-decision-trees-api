@@ -1,4 +1,5 @@
 from .. import ma
+from flask import escape
 from marshmallow import pre_load, post_load, post_dump
 from collections import Iterable
 from functools import partialmethod
@@ -18,6 +19,13 @@ class UniqueIdMixin(object):
 class TimestampMixin(object):
     created = ma.DateTime()
     updated = ma.DateTime()
+
+
+class EscapedStr(ma.Field):
+
+    def deserialize(self, value, attr = None, data = None, **kwargs):
+        field_content = super().deserialize(value, attr, data, **kwargs)
+        return escape(field_content) if isinstance(field_content, str) else field_content
 
 
 class BaseSchema(ma.Schema):

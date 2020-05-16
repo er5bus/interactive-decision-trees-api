@@ -25,8 +25,11 @@ class ContentNodeCreateView(generics.CreateAPIView):
         for action in content_node_instance.actions:
             action.save()
 
-            if action.point_to and action.point_to.id:
-                action.point_to_rel.connect(action.point_to)
+            if action.point_to_type == str(models.PointTo.LOGIC_NODE) or action.point_to_type == str(models.PointTo.CONTENT_NODE):
+                action.point_to_node_rel.connect(action.point_to_node)
+
+            if action.point_to_type == str(models.PointTo.TREES):
+                action.point_to_tree_rel.connect(action.point_to_tree)
 
             for action_value in action.values or []:
                 action_value.save()
@@ -63,11 +66,14 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     def perform_relation_delete(self, content_node_instance):
         # delete actions
         for action in content_node_instance.actions_rel.all():
-            for action_value in action.values_rel.all():
+            print(content_node_instance.actions, action not in content_node_instance.actions)
+            if content_node_instance.actions and action in content_node_instance.actions:
                 for action_instance in content_node_instance.actions:
-                    if hasattr(action_instance, "id") and action_instance.id == action.id and action_value not in action_instance.values:
-                        action_value.delete()
-            if content_node_instance.actions and action not in content_node_instance.actions:
+                    if hasattr(action_instance, "id"):
+                        for action_value in action.values_rel.all():
+                            if action_instance.id == action.id and action_value not in action_instance.values:
+                                action_value.delete()
+            else:
                 action.delete()
 
     def perform_update(self, content_node_instance):
@@ -77,9 +83,14 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         for action in content_node_instance.actions:
             action.save()
 
-            action.point_to_rel.disconnect_all()
-            if action.point_to and action.point_to.id:
-                action.point_to_rel.connect(action.point_to)
+            action.point_to_node_rel.disconnect_all()
+            action.point_to_tree_rel.disconnect_all()
+
+            if action.point_to_type == str(models.PointTo.LOGIC_NODE) or action.point_to_type == str(models.PointTo.CONTENT_NODE):
+                action.point_to_node_rel.connect(action.point_to_node)
+
+            if action.point_to_type == str(models.PointTo.TREES):
+                action.point_to_tree_rel.connect(action.point_to_tree)
 
             for action_value in action.values or []:
                 action_value.save()

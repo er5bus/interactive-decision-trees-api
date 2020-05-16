@@ -23,8 +23,13 @@ class Action(BaseStructuredNode):
 
     order = IntegerProperty()
 
-    point_to_rel = RelationshipTo(BaseNode, "POINT_TO")
-    point_to = LazyLoadingRelationship(relationship="point_to_rel", many=False)
+    point_to_type = StringProperty()
+
+    point_to_node_rel = RelationshipTo(BaseNode, "POINT_TO_NODE")
+    point_to_node = LazyLoadingRelationship(relationship="point_to_node_rel", many=False)
+
+    point_to_tree_rel = RelationshipTo("app.models.tree.Tree", "POINT_TO_TREE")
+    point_to_tree = LazyLoadingRelationship(relationship="point_to_tree_rel", many=False)
 
     values_rel = RelationshipTo("ActionValue", "ACTION_VALUE")
     values = LazyLoadingRelationship(relationship="values_rel")

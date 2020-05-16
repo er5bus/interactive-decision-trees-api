@@ -77,7 +77,7 @@ class NodesRetriveView(generics.RetrieveAPIView):
     def serialize(self, tree_nodes, many=False):
         items = []
         for node in tree_nodes:
-            items.append({"value": node.id, "type": node.node_type, "label": "{0} > {1}".format(node.node_type, node.node_name) })
+            items.append({"value": node.id, "type": node.node_type, "label": node.node_name })
         return { "items": items }
 
 

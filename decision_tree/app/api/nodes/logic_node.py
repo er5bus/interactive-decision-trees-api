@@ -25,11 +25,21 @@ class LogicNodeCreateView(generics.CreateAPIView):
         for rule in logic_node_instance.rules or []:
             rule.save()
             rule.score_rel.connect(rule.score)
-            rule.point_to_rel.connect(rule.point_to)
+
+            if rule.point_to_type == str(models.PointTo.LOGIC_NODE) or rule.point_to_type == str(models.PointTo.CONTENT_NODE):
+                rule.point_to_node_rel.connect(rule.point_to_node)
+
+            if rule.point_to_type == str(models.PointTo.TREES):
+                rule.point_to_tree_rel.connect(rule.point_to_tree)
 
             logic_node_instance.rules_rel.connect(rule)
 
-        logic_node_instance.default_node_rel.connect(logic_node_instance.default_node)
+        if logic_node_instance.default_point_to_type == str(models.PointTo.LOGIC_NODE) or logic_node_instance.default_point_to_type == str(models.PointTo.CONTENT_NODE):
+            logic_node_instance.default_node_rel.connect(logic_node_instance.default_node)
+
+        if logic_node_instance.default_point_to_type == str(models.PointTo.TREES):
+            logic_node_instance.default_tree_rel.connect(logic_node_instance.default_tree)
+
         logic_node_instance.tree_rel.connect(self.current_tree)
 
 
@@ -61,14 +71,27 @@ class LogicNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         for rule in logic_node_instance.rules or []:
             rule.save()
             rule.score_rel.disconnect_all()
+
             rule.score_rel.connect(rule.score)
-            rule.point_to_rel.disconnect_all()
-            rule.point_to_rel.connect(rule.point_to)
+
+            rule.point_to_node_rel.disconnect_all()
+            if rule.point_to_type == str(models.PointTo.LOGIC_NODE) or rule.point_to_type == str(models.PointTo.CONTENT_NODE):
+                rule.point_to_node_rel.connect(rule.point_to_node)
+
+            rule.point_to_tree_rel.disconnect_all()
+            if rule.point_to_type == str(models.PointTo.TREES):
+                rule.point_to_tree_rel.connect(rule.point_to_tree)
 
             logic_node_instance.rules_rel.connect(rule)
 
-        logic_node_instance.default_node_rel.disconnect_all()
-        logic_node_instance.default_node_rel.connect(logic_node_instance.default_node)
+        if logic_node_instance.default_point_to_type == str(models.PointTo.LOGIC_NODE) or logic_node_instance.default_point_to_type == str(models.PointTo.CONTENT_NODE):
+            logic_node_instance.default_node_rel.disconnect_all()
+            logic_node_instance.default_node_rel.connect(logic_node_instance.default_node)
+
+        if logic_node_instance.default_point_to_type == str(models.PointTo.TREES):
+            logic_node_instance.default_tree_rel.disconnect_all()
+            logic_node_instance.default_tree_rel.connect(logic_node_instance.default_tree)
+
 
     def perform_delete(self, logic_node_instance):
         self.perform_relation_delete(logic_node_instance)
