@@ -60,7 +60,6 @@ class CypherQueryBuilder(object):
             return None
 
     def get_all(self, func):
-        print(self.cypher_query)
         results, columns = self.cypher(self.cypher_query)
         items = []
         for row in results:

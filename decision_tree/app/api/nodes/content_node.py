@@ -24,7 +24,6 @@ class ContentNodeCreateView(generics.CreateAPIView):
 
         for action in content_node_instance.actions:
             action.save()
-
             if action.point_to_type == str(models.PointTo.LOGIC_NODE) or action.point_to_type == str(models.PointTo.CONTENT_NODE):
                 action.point_to_node_rel.connect(action.point_to_node)
 
@@ -33,7 +32,8 @@ class ContentNodeCreateView(generics.CreateAPIView):
 
             for action_value in action.values or []:
                 action_value.save()
-                if action_value.score:
+                if hasattr(action_value.score, "id"):
+                    print(action_value.score.id)
                     action_value.score_rel.connect(action_value.score)
 
                 action.values_rel.connect(action_value)
@@ -66,7 +66,6 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     def perform_relation_delete(self, content_node_instance):
         # delete actions
         for action in content_node_instance.actions_rel.all():
-            print(content_node_instance.actions, action not in content_node_instance.actions)
             if content_node_instance.actions and action in content_node_instance.actions:
                 for action_instance in content_node_instance.actions:
                     if hasattr(action_instance, "id"):
@@ -94,7 +93,8 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
 
             for action_value in action.values or []:
                 action_value.save()
-                if action_value.score:
+                if hasattr(action_value.score, "id"):
+                    print(action_value.score.id)
                     action_value.score_rel.connect(action_value.score)
                 action.values_rel.connect(action_value)
 

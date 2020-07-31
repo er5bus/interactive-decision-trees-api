@@ -1,0 +1,27 @@
+FROM tiangolo/uwsgi-nginx:python3.8-alpine
+
+LABEL MAINTAINER="Rami sfari <rami2sfari@gmail.com>"
+
+ENV UWSGI_INI /decision_tree/uwsgi.ini
+
+ENV NGINX_WORKER_PROCESSES auto
+ENV NGINX_WORKER_CONNECTIONS 2048
+
+ENV LISTEN_PORT 5000
+
+EXPOSE 5000
+
+COPY ./requirements.txt /
+
+# Install Dependencies
+RUN ["pip", "install", "-r", "/requirements.txt"]
+
+# Create a group and user
+#RUN addgroup -S uswgi && adduser -S uswgi -G uswgi
+
+# Tell docker that all future commands should run as the appuser user
+#USER uswgi
+
+# Copy files
+COPY ./decision_tree /decision_tree
+WORKDIR /decision_tree

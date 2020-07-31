@@ -1,4 +1,4 @@
-from neomodel import StringProperty, RelationshipTo, RelationshipFrom
+from neomodel import StringProperty, RelationshipTo, RelationshipFrom, BooleanProperty
 from ._behaviors import UniqueIdMixin, TimestampMixin, BaseStructuredNode
 
 
@@ -10,6 +10,9 @@ class BaseNode(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
 
     node_name = StringProperty(index=True)
     tree_rel = RelationshipTo("app.models.user.Tree", "RELATED_TO")
+
+    is_last_node = BooleanProperty(default=False)
+    is_first_node = BooleanProperty(default=False)
 
     @classmethod
     def inflate_node(cls, node):

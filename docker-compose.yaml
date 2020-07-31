@@ -3,12 +3,11 @@ version: '2'
 services:
   decision_trees:
     build: .
-    env_file: .env
     restart: on-failure:5
     volumes:
       - ./decision_tree:/decision_tree
     env_file:
-      - ./.flaskenv
+      - ./.env
     ports:
       - 5000:5000
     depends_on:
@@ -23,8 +22,8 @@ services:
       - 7474:7474
       - 6477:6477
       - 7687:7687
-    env_file:
-      - ./.neo4jenv
+    environment:
+        NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     volumes:
       - ./neo4j/conf:/conf
       - ./neo4j/data:/data

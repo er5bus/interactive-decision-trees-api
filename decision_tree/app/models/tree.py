@@ -44,6 +44,9 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     first_node_rel = RelationshipTo("app.models.content_node.ContentNode", "START_NODE")
     first_node = LazyLoadingRelationship("first_node_rel", many=False)
 
+    last_node_rel = RelationshipTo("app.models.content_node.ContentNode", "END_NODE")
+    last_node = LazyLoadingRelationship("last_node_rel", many=False)
+
     def load_tree_nodes(self, skip, limit, **kwargs):
         return self.cypher_query.cypher_query_builder("a").match("n", "RELATED_TO", "a").and_where("n", **kwargs)\
             .return_alias("n").paginate(skip, limit).get_all(BaseNode.inflate_node)

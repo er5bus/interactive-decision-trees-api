@@ -1,4 +1,5 @@
 from flask import request, abort, jsonify
+from marshmallow import EXCLUDE
 from marshmallow.exceptions import ValidationError
 from flask_jwt_extended import jwt_required, get_current_user
 from neomodel import db, Q
@@ -88,11 +89,11 @@ class BaseMethodMixin:
 
     def deserialize(self, data = [], node = None, partial=False, schema_class=None):
         try:
-            serializer = self.schema_class() if not schema_class else schema_class()
+            serializer = self.schema_class(unknown=EXCLUDE) if not schema_class else schema_class(unknown=EXCLUDE)
             if node:
                 node.load_relations = False
             serializer.context = dict(instance=node)
-            instance = serializer.load(data, unknown="EXCLUDE", partial=partial)
+            instance = serializer.load(data, partial=partial)
             self.validate_unique(instance, node)
             return instance
         except ValidationError as err:
