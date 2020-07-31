@@ -54,10 +54,13 @@ class TreeFirstNodeSetView(generics.ListCreateAPIView):
         content_node.is_first_node = True
         content_node.save()
 
-        first_node = self.current_tree.first_node_rel.get()
-        if first_node :
-            first_node.is_first_node = False
-            first_node.save()
+        try:
+            first_node = self.current_tree.first_node_rel.get()
+            if first_node :
+                first_node.is_first_node = False
+                first_node.save()
+        except:
+            pass
 
         self.current_tree.first_node_rel.disconnect_all()
         self.current_tree.first_node_rel.connect(content_node)
@@ -84,10 +87,13 @@ class TreeLastNodeSetView(generics.ListCreateAPIView):
         content_node.is_last_node = True
         content_node.save()
 
-        first_node = self.current_tree.last_node_rel.get()
-        if first_node :
-            first_node.is_last_node = False
-            first_node.save()
+        try:
+            first_node = self.current_tree.last_node_rel.get()
+            if first_node :
+                first_node.is_last_node = False
+                first_node.save()
+        except:
+            pass
 
         self.current_tree.last_node_rel.disconnect_all()
         self.current_tree.last_node_rel.connect(content_node)
@@ -99,7 +105,7 @@ class NodesRetriveView(generics.RetrieveAPIView):
     route_path = "/tree/<string:tree_uid>/all/nodes"
     route_name = "tree_retrieve_nodes"
 
-    #decorators = [ jwt_required ]
+    decorators = [ jwt_required ]
 
     model_class = models.Tree
 
@@ -116,5 +122,29 @@ class NodesRetriveView(generics.RetrieveAPIView):
         for node in tree_nodes:
             items.append({"value": node.id, "type": node.node_type, "label": node.node_name })
         return { "items": items }
+
+
+class NodeRetrieveView(generics.RetrieveAPIView):
+    route_path = "/tree/<string:tree_uid>/node/<string:node_uid>"
+    route_name = "node_retrieve"
+
+    #decorators = [ jwt_required ]
+
+    lookup_field_and_url_kwarg = {"tree": "tree_uid" , "node": "node_uid"}
+
+    def filter_node(self, model_class=None, **kwargs):
+        self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
+        self.node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
+        self.node.load_relations = True
+        if isinstance(self.node, models.ContentNode):
+            self.schema_class = schemas.ContentNodeSchema
+        else:
+            self.schema_class = schemas.LogicNodeSchema
+        return self.node
+
+    def retrieve(self, *args, **kwargs):
+        response, response_code = super().retrieve(*args, **kwargs)
+        return { "type": self.node.__class__.__name__, "display_style": self.current_tree.display_style, **response }, response_code
+
 
 utils.add_url_rule(api, TreeFirstNodeSetView, TreeNodesListView, TreeLastNodeSetView, NodesRetriveView, NodeRetrieveView)
