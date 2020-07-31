@@ -32,9 +32,9 @@ services:
       - ./neo4j/plugins:/plugins
     labels:
       - traefik.enable=true
-      - traefik.http.routers.survey_back.tls=${TLS}
-      - traefik.http.routers.survey_back.rule=Host("${GRAPH_DOMAINE_NAME}")
-      - traefik.http.services.survey_back_service.loadbalancer.server.port=7474
+      - traefik.http.routers.graph_db.tls=${TLS}
+      - traefik.http.routers.graph_db.rule=Host("${GRAPH_DOMAINE_NAME}")
+      - traefik.http.services.graph_db_service.loadbalancer.server.port=7474
 
 networks:
   default:
