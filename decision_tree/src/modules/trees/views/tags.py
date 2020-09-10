@@ -1,6 +1,5 @@
-from . import api
-from .. import models, schemas
-from ..views import utils, generics
+from .... import models, schemas
+from ....tools.views import generics
 from flask_jwt_extended import jwt_required, get_current_user
 
 
@@ -55,7 +54,7 @@ class TagRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return None
 
 
-class TagsRetriveView(generics.RetrieveAPIView):
+class TagsRetriveAllView(generics.RetrieveAPIView):
 
     route_path = "/tags/all"
     route_name = "tags_retrieve"
@@ -65,6 +64,3 @@ class TagsRetriveView(generics.RetrieveAPIView):
     def retrieve(self, *args, **kwargs):
         user = get_current_user()
         return { "items": [ {"id": tag.id, "uid": tag.uid, "name": tag.name, "description": tag.description, 'color': tag.color } for tag in user.load_tags() ] }, 200
-
-
-utils.add_url_rule(api, TagListCreateView, TagRetrieveUpdateDestroyView, TagsRetriveView)

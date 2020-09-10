@@ -1,6 +1,5 @@
-from . import api
-from .. import models, schemas
-from ..views import utils, generics
+from .... import models, schemas
+from ....tools.views import generics
 from flask_jwt_extended import jwt_required, get_current_user
 
 
@@ -106,6 +105,3 @@ class TreeRetriveAllView(generics.RetrieveAPIView):
             if isinstance(tree.first_node, models.ContentNode):
                 items.append({"value": tree.id, "label": tree.tree_name })
         return { "items": items }
-
-
-utils.add_url_rule(api, TreeListCreateView, TreeRetriveAllView, TreeRetrieveUpdateDestroyView)

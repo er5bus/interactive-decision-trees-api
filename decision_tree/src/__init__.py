@@ -33,7 +33,8 @@ def create_app(config_name):
         integrations=[FlaskIntegration()]
     )
 
-    from .api import api as api_blueprint
-    app.register_blueprint(api_blueprint, url_prefix="/api")
+    from .modules import api_blueprints
+    for api_blueprint in api_blueprints:
+        app.register_blueprint(api_blueprint, url_prefix="/api")
 
     return app

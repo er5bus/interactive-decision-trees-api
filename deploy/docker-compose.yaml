@@ -1,10 +1,8 @@
 version: '2'
 
 services:
-  decision_trees_prod:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
+  decision_trees_back:
+    image: predictanalyse/tree-decision-creator-back 
     restart: on-failure:5
     env_file:
       - ./.env
@@ -14,9 +12,9 @@ services:
       - "graph_db:graph_db"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.decision_trees_prod.tls=${TLS}
-      - traefik.http.routers.decision_trees_prod.rule=Host("${SITE_DOMAINE_NAME}")
-      - traefik.http.services.decision_trees_prod.loadbalancer.server.port=5000
+      - traefik.http.routers.decision_trees_back.tls=${TLS}
+      - traefik.http.routers.decision_trees_back.rule=Host("${SITE_DOMAINE_NAME}")
+      - traefik.http.services.decision_trees_back.loadbalancer.server.port=5000
 
   graph_db:
     image: neo4j:3.3.9-enterprise

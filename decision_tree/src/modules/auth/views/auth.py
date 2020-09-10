@@ -1,6 +1,5 @@
-from . import api
-from .. import models, schemas, jwt
-from ..views import generics , utils
+from .... import models, schemas, jwt
+from ....tools.views import generics
 from flask import request, abort
 from flask_jwt_extended import create_access_token, get_jwt_identity, get_raw_jwt, get_jti, jwt_required
 
@@ -63,6 +62,3 @@ class UserLogoutView(generics.CreateAPIView):
         jti = get_raw_jwt()["jti"]
         blacklist.add(jti)
         return {"message": "Successfully logged out"}, 200
-
-
-utils.add_url_rule(api, UserRegisterView, UserLoginView, UserLogoutView)

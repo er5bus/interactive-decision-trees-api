@@ -1,6 +1,5 @@
-from .. import api
-from ... import models, schemas
-from ...views import utils, generics
+from .... import models, schemas
+from ....tools.views import generics
 from flask_jwt_extended import jwt_required, get_current_user
 
 
@@ -103,6 +102,3 @@ class ContentNodeRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
     def perform_delete(self, content_node_instance):
         self.perform_relation_delete(content_node_instance)
         super().perform_delete(content_node_instance)
-
-
-utils.add_url_rule(api, ContentNodeCreateView, ContentNodeRetrieveUpdateDestroyView)
