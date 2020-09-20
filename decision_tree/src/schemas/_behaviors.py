@@ -1,5 +1,4 @@
 from .. import ma
-from flask import Markup
 from marshmallow import pre_load, post_load, post_dump
 from collections import Iterable
 from functools import partialmethod
@@ -36,7 +35,7 @@ class BaseSchema(ma.Schema):
     def set_field_value(self, data, field_name, value):
         if self.to_camelcase(field_name) in data:
             data[self.to_camelcase(field_name)] = value
-        else:
+        elif field_name in data:
             data[field_name] = value
 
     def to_camelcase(self, s):
