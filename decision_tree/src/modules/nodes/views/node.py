@@ -13,14 +13,18 @@ class NodeRetrieveView(generics.RetrieveAPIView):
 
     def filter_node(self, model_class=None, **kwargs):
         self.current_tree = models.Tree.nodes.filter(uid__exact=kwargs.get("tree")).get_or_none()
-        self.node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
-        self.node.load_relations = True
+        if self.current_tree:
+            self.node = self.current_tree.load_tree_node(uid=kwargs.get("node"))
+            return self.node
+        return None
+        
+    def serialize(self, data = [], many=False, schema_class=None):
         if isinstance(self.node, models.ContentNode):
-            self.schema_class = schemas.ContentNodeSchema
+            serializer = schemas.ContentNodeSchema(many=many)
         else:
-            self.schema_class = schemas.LogicNodeSchema
-        return self.node
-
-    def retrieve(self, *args, **kwargs):
-        response, response_code = super().retrieve(*args, **kwargs)
-        return { "type": self.node.__class__.__name__, "display_style": self.current_tree.display_style, **response }, response_code
+            serializer = schemas.LogicNodeSchema(many=many)
+        self.node.load_relations = True
+        result = serializer.dump(data)
+        result["type"] = self.node.__class__.__name__
+        result["display_style"] = self.current_tree.display_style
+        return result

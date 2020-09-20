@@ -1,5 +1,6 @@
 from neomodel import StringProperty, RelationshipTo, RelationshipFrom
-from ._behaviors import UniqueIdMixin, TimestampMixin, LazyLoadingRelationship, BaseStructuredNode
+from ._fields import LazyLoadingRelationship
+from ._behaviors import UniqueIdMixin, TimestampMixin, BaseStructuredNode
 from .base_node import BaseNode
 
 
@@ -19,7 +20,7 @@ class Tag(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     tree_rel = RelationshipFrom("Tree", "HAS_TAG")
     tree = LazyLoadingRelationship(relationship="tree_rel", many=False)
 
-    owner_rel = RelationshipTo("app.models.user.User", "CREATED_BY")
+    owner_rel = RelationshipTo("src.models.user.User", "CREATED_BY")
     owner = LazyLoadingRelationship(relationship="owner_rel", many=False)
 
 
@@ -30,7 +31,7 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     description = StringProperty()
     display_style = StringProperty(choices=DISPLAY_STYLES)
 
-    owner_rel = RelationshipTo("app.models.user.User", "OWNED_BY")
+    owner_rel = RelationshipTo("src.models.user.User", "OWNED_BY")
     owner = LazyLoadingRelationship(relationship="owner_rel", many=False)
 
     scores_rel = RelationshipTo("Score", "HAS_SCORE")
@@ -39,12 +40,12 @@ class Tree(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
     tags_rel = RelationshipTo("Tag", "HAS_TAG")
     tags = LazyLoadingRelationship(relationship="tags_rel")
 
-    tree_nodes_rel = RelationshipFrom("app.models.base_node.BaseNode", "RELATED_TO")
+    tree_nodes_rel = RelationshipFrom("src.models.base_node.BaseNode", "RELATED_TO")
 
-    first_node_rel = RelationshipTo("app.models.content_node.ContentNode", "START_NODE")
+    first_node_rel = RelationshipTo("src.models.content_node.ContentNode", "START_NODE")
     first_node = LazyLoadingRelationship("first_node_rel", many=False)
 
-    last_node_rel = RelationshipTo("app.models.content_node.ContentNode", "END_NODE")
+    last_node_rel = RelationshipTo("src.models.content_node.ContentNode", "END_NODE")
     last_node = LazyLoadingRelationship("last_node_rel", many=False)
 
     def load_tree_nodes(self, skip, limit, **kwargs):

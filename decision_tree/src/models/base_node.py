@@ -9,7 +9,7 @@ class BaseNode(BaseStructuredNode, UniqueIdMixin, TimestampMixin):
         self.node_type = self.__class__.__name__
 
     node_name = StringProperty(index=True)
-    tree_rel = RelationshipTo("app.models.user.Tree", "RELATED_TO")
+    tree_rel = RelationshipTo("src.models.user.Tree", "RELATED_TO")
 
     is_last_node = BooleanProperty(default=False)
     is_first_node = BooleanProperty(default=False)

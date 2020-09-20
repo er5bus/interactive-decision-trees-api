@@ -1,5 +1,6 @@
 from .. import models, ma
-from ._behaviors import BaseSchema, EscapedStr, UniqueIdMixin, TimestampMixin
+from ._fields import EscapedStr
+from ._behaviors import BaseSchema, UniqueIdMixin, TimestampMixin
 from marshmallow.validate import Length, OneOf
 from marshmallow import post_dump
 
@@ -28,8 +29,8 @@ class TreeSchema(BaseSchema, UniqueIdMixin, TimestampMixin):
 
     scores = ma.Nested("ScoreSchema", many=True)
 
-    first_node = ma.Nested("app.schemas.content_node.ContentNodeSchema")
-    last_node = ma.Nested("app.schemas.content_node.ContentNodeSchema")
+    first_node = ma.Nested("src.schemas.content_node.ContentNodeSchema")
+    last_node = ma.Nested("src.schemas.content_node.ContentNodeSchema")
     tags = ma.Pluck(TagSchema, "id", many=True)
 
     class Meta:
@@ -37,8 +38,10 @@ class TreeSchema(BaseSchema, UniqueIdMixin, TimestampMixin):
 
     @post_dump
     def node_dump(self, data, many, **kwargs):
-        if "first_node" in data and data["first_node"] and "id" not in data["first_node"]:
-            data["first_node"] = None
-        if "last_node" in data and data["last_node"] and "id" not in data["last_node"]:
-            data["last_node"] = None
+        first_node = self.get_field_value(data, "first_node")
+        last_node = self.get_field_value(data, "last_node")
+        if first_node and "id" not in first_node:
+            self.set_field_value(data, "first_node", None)
+        if last_node and "id" not in last_node:
+            self.set_field_value(data, "last_node", None)
         return data

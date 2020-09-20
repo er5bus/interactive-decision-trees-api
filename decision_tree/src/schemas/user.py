@@ -1,6 +1,7 @@
-from .. import models, ma
-from ._behaviors import BaseSchema, EscapedStr, TimestampMixin, UniqueIdMixin
 from marshmallow.validate import Length
+from .. import models
+from ._fields import EscapedStr
+from ._behaviors import BaseSchema, TimestampMixin, UniqueIdMixin
 
 
 class UserSchema(BaseSchema, UniqueIdMixin, TimestampMixin):

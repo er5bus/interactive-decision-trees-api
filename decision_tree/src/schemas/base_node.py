@@ -1,5 +1,6 @@
 from .. import models, ma
-from ._behaviors import BaseSchema, EscapedStr, UniqueIdMixin, TimestampMixin
+from ._fields import EscapedStr
+from ._behaviors import BaseSchema, UniqueIdMixin, TimestampMixin
 from marshmallow.validate import Length, Range, ContainsOnly, OneOf
 
 

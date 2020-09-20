@@ -1,5 +1,6 @@
 from neomodel import StringProperty, RelationshipTo, RelationshipFrom
-from ._behaviors import UniqueIdMixin, UserMixin, TimestampMixin, LazyLoadingRelationship, BaseStructuredNode
+from ._fields import LazyLoadingRelationship
+from ._behaviors import UniqueIdMixin, UserMixin, TimestampMixin, BaseStructuredNode
 from .tree import Tree, Tag
 
 

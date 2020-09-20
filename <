@@ -48,10 +48,6 @@ class ActionSchema(BaseSchema, UniqueIdMixin):
     @pre_load
     def load_actions(self, data, many, **kwargs):
         point_to_type = self.get_field_value(data, "point_to_type")
-        if point_to_type == str(models.PointTo.NOTHING):
-            self.set_field_value(data, "point_to_tree", None)
-            self.set_field_value(data, "point_to_node", None)
-        
         if point_to_type == str(models.PointTo.LOGIC_NODE) or point_to_type == str(models.PointTo.CONTENT_NODE):
             point_to_node = self.get_field_value(data, "point_to_node")
             self.set_field_value(data, "point_to_tree", None)
@@ -68,15 +64,17 @@ class ActionSchema(BaseSchema, UniqueIdMixin):
 
     @post_dump
     def dump_actions(self, data, many, **kwargs):
+        point_to_node = self.get_field_value(data, "point_to_node")
         point_to_type = self.get_field_value(data, "point_to_type")
-
-        if point_to_type == str(models.PointTo.NOTHING):
-            self.set_field_value(data, "point_to_tree", None)
+        point_to_tree = self.get_field_value(data, "point_to_tree")
+        
+        #print(point_to_tree, point_to_node,  point_to_type, str(models.PointTo.LOGIC_NODE), str(models.PointTo.CONTENT_NODE))
+        if point_to_type not in (str(models.PointTo.LOGIC_NODE), str(models.PointTo.CONTENT_NODE)):
+            print("node", point_to_type, point_to_type == str(models.PointTo.LOGIC_NODE), point_to_type == str(models.PointTo.CONTENT_NODE))
             self.set_field_value(data, "point_to_node", None)
-        if point_to_type in (str(models.PointTo.LOGIC_NODE), str(models.PointTo.CONTENT_NODE)):
+        if point_to_type != str(models.PointTo.TREES):
+            print("tree", point_to_type, point_to_type != str(models.PointTo.TREES))
             self.set_field_value(data, "point_to_tree", None)
-        if point_to_type == str(models.PointTo.TREES):
-            self.set_field_value(data, "point_to_node", None)
         
         return data
 
