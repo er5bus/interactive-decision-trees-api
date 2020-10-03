@@ -10,5 +10,5 @@ class EscapedStr(ma.Field):
 
     def serialize(self, value, *args, **kwargs):
         field_content = super().serialize(value, *args, **kwargs)
-        return Markup.unescape(str(field_content))
+        return Markup.unescape(str(field_content)) if field_content else None
 
