@@ -5,8 +5,6 @@ import os
 
 application = create_app(os.getenv('FLASK_CONFIG', 'default'))
 
-import handle_errors
-
 
 @application.cli.command()
 def test():

@@ -31,7 +31,7 @@ class TreeNodesListView(generics.ListAPIView):
         return items
 
 
-class NodesRetriveView(generics.RetrieveAPIView):
+class AllNodesRetriveView(generics.RetrieveAPIView):
 
     route_path = "/tree/<string:tree_uid>/all/nodes"
     route_name = "tree_retrieve_nodes"

@@ -10,7 +10,7 @@ class UpdateMixin(BaseMethodMixin):
     """
     def update (self, *args, **kwargs):
         instance = self.get_node(**kwargs)
-        instance_updated = self.deserialize(request.json, deepcopy(instance), partial=False)
+        instance_updated = self.deserialize(request.json, instance, partial=False)
         with db.transaction:
             self.perform_update(instance_updated)
 
@@ -18,7 +18,7 @@ class UpdateMixin(BaseMethodMixin):
 
     def partial_update (self, *args, **kwargs):
         instance = self.get_node(**kwargs)
-        instance_updated = self.deserialize(request.json ,partial=True)
+        instance_updated = self.deserialize(request.json, instance ,partial=True)
         with db.transaction:
             self.perform_update(instance)
 

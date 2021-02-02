@@ -93,8 +93,6 @@ class TreeRetriveAllView(generics.RetrieveAPIView):
 
     model_class = models.Tree
 
-    lookup_field_and_url_kwarg = { "uid": "tree_uid" }
-
     def filter_node(self, model_class=None, **kwargs):
         user = get_current_user()
         return user.load_trees(0, 500)
