@@ -11,8 +11,8 @@ class Config:
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access']
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hard to guess string")
-    JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY", "hard to guess string")
-    JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY", "hard to guess string")
+    #JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY", "hard to guess string")
+    #JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY", "hard to guess string")
     JWT_ERROR_MESSAGE_KEY = 'message'
 
     NEOMODEL_DATABASE_URL = os.getenv('DATABASE_URL', '<replace it with a database url>')

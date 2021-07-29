@@ -1,5 +1,5 @@
 Flask==1.1.1
-Flask-JWT-Extended==3.22.0
+Flask-JWT-Extended==3.25.1
 Flask-Babel==1.0.0
 flask-marshmallow==0.10.1
 neomodel==3.3.2

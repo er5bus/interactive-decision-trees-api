@@ -98,5 +98,5 @@ class ContentNodeSchema(BaseNodeSchema):
     __model__ = models.ContentNode
 
     content_area = EscapedStr(max_length=5000, allow_none=True, required=False, validate=Length(max=5000))
-    question = EscapedStr(max_length=1000, required=True, validate=Length(max=1000, min=1))
+    question = EscapedStr(max_length=1000,  allow_none=True, required=False, validate=Length(max=1000, min=1))
     actions = ma.List(ma.Nested(ActionSchema))
